@@ -310,7 +310,7 @@
         </div>
       </section>
 
-      <!-- TAB KHUSUS PETUGAS (RT 37 / RT 38): SCAN QR, RUMAH RT, BUAT, CETAK & EXPORT LAPORAN MINGGUAN -->
+      <!-- TAB KHUSUS PETUGAS (RT 37 / RT 38) -->
       <section id="tab-petugas" class="tab-panel hidden space-y-4">
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-2">
@@ -453,15 +453,20 @@
   <!-- MODAL SCAN QR KHUSUS JIMPITAN SEWAN -->
   <div id="scannerModal" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-40">
     <div class="bg-white rounded-2xl w-full max-w-md p-5 space-y-4">
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between gap-2">
         <div>
           <h3 class="font-bold text-lg text-slate-900">Scan QR Semua Rumah</h3>
           <p id="scannerTargetInfo" class="text-xs text-slate-500">Wajib scan QR resmi Jimpitan Sewan sebelum konfirmasi bayar</p>
         </div>
-        <button onclick="closeScannerModal()" class="px-3 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold">Tutup</button>
+        <div class="flex items-center gap-1.5">
+          <button onclick="switchCameraDevice()" class="px-2.5 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-semibold">🔄 Kamera</button>
+          <button onclick="closeScannerModal()" class="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold">Tutup</button>
+        </div>
       </div>
 
-      <div id="qrReaderBox" class="w-full rounded-xl overflow-hidden bg-slate-900 min-h-[240px]"></div>
+      <div id="qrReaderBox" class="w-full rounded-xl overflow-hidden bg-slate-900 min-h-[250px] flex items-center justify-center text-white text-xs">
+        Memuat kamera...
+      </div>
 
       <div id="scanStatusMsg" class="text-xs p-2.5 rounded-xl bg-slate-100 text-slate-700">
         Arahkan kamera ke QR Resmi Semua Rumah Jimpitan Sewan...
@@ -470,6 +475,7 @@
       <div class="pt-2 border-t border-slate-100 space-y-2">
         <label class="block text-xs font-medium text-slate-600">Atau pilih gambar QR dari galeri HP:</label>
         <input id="qrFileInput" type="file" accept="image/*" onchange="scanQrFromFile(event)" class="w-full text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-emerald-50 file:text-emerald-700 file:font-semibold" />
+        <div id="qrFileTempBox" class="hidden"></div>
       </div>
     </div>
   </div>
@@ -643,7 +649,11 @@
     let activeMonth = getCurrentMonth();
     let currentTab = 'rumah';
     let html5QrInstance = null;
+    let fileQrInstance = null;
     let pendingScanRumahId = null;
+    let availableCameras = [];
+    let currentCameraIdx = 0;
+    let isScannerStarting = false;
 
     function loadLocalState() {
       try {
@@ -724,8 +734,8 @@
       }
     });
 
-    function logout() {
-      closeScannerModal();
+    async function logout() {
+      await closeScannerModal();
       closeConfirmPaymentModal();
       currentUser = null;
       document.getElementById('appScreen').classList.add('hidden');
@@ -880,7 +890,7 @@
       openScannerModal(rumahId);
     }
 
-    function handleScannedText(decodedText) {
+    async function handleScannedText(decodedText) {
       const check = verifyAllHousesQrPayload(decodedText);
       const statusEl = document.getElementById('scanStatusMsg');
 
@@ -893,12 +903,70 @@
       const targetId = pendingScanRumahId;
       statusEl.className = 'text-xs p-2.5 rounded-xl bg-emerald-100 text-emerald-800 font-semibold';
       statusEl.textContent = '✅ QR Semua Rumah valid! Membuka konfirmasi bayar...';
-      closeScannerModal();
+      await closeScannerModal();
       openConfirmPaymentModal(targetId);
     }
 
-    function openScannerModal(targetRumahId = null) {
+    async function stopAndClearScanner() {
+      if (html5QrInstance) {
+        try {
+          if (html5QrInstance.isScanning) {
+            await html5QrInstance.stop();
+          }
+        } catch (err) {
+          console.warn('Stop scanner:', err);
+        }
+        try {
+          await html5QrInstance.clear();
+        } catch (err) {
+          console.warn('Clear scanner:', err);
+        }
+        html5QrInstance = null;
+      }
+      document.getElementById('qrReaderBox').innerHTML = 'Memuat kamera...';
+    }
+
+    async function startCameraStream(deviceOrConstraint) {
+      if (isScannerStarting) return;
+      isScannerStarting = true;
+      const statusEl = document.getElementById('scanStatusMsg');
+
+      try {
+        await stopAndClearScanner();
+        html5QrInstance = new Html5Qrcode('qrReaderBox');
+        const config = { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 };
+
+        await html5QrInstance.start(
+          deviceOrConstraint,
+          config,
+          (decodedText) => {
+            handleScannedText(decodedText);
+          },
+          () => {}
+        );
+
+        statusEl.className = 'text-xs p-2.5 rounded-xl bg-emerald-50 text-emerald-800';
+        statusEl.textContent = 'Kamera aktif. Arahkan ke QR Resmi Semua Rumah Jimpitan Sewan.';
+      } catch (err) {
+        const msg = String(err?.message || err || '');
+        if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+          statusEl.className = 'text-xs p-2.5 rounded-xl bg-red-100 text-red-700 font-semibold';
+          statusEl.textContent = '⛔ Kamera diblokir karena koneksi bukan HTTPS. Buka lewat link HTTPS Netlify atau pilih gambar QR dari galeri.';
+        } else if (msg.toLowerCase().includes('permission') || msg.toLowerCase().includes('notallowed')) {
+          statusEl.className = 'text-xs p-2.5 rounded-xl bg-red-100 text-red-700 font-semibold';
+          statusEl.textContent = '⛔ Izin kamera ditolak browser. Aktifkan izin Camera di setelan browser HP lalu buka ulang, atau pilih gambar QR dari galeri.';
+        } else {
+          statusEl.className = 'text-xs p-2.5 rounded-xl bg-amber-50 text-amber-800';
+          statusEl.textContent = 'Kamera belum bisa dibuka (' + (msg || 'perangkat sibuk') + '). Coba tekan 🔄 Kamera atau pilih gambar QR dari galeri.';
+        }
+      } finally {
+        isScannerStarting = false;
+      }
+    }
+
+    async function openScannerModal(targetRumahId = null) {
       pendingScanRumahId = targetRumahId;
+      document.getElementById('qrFileInput').value = '';
       const modal = document.getElementById('scannerModal');
       const statusEl = document.getElementById('scanStatusMsg');
       const targetInfo = document.getElementById('scannerTargetInfo');
@@ -913,53 +981,64 @@
       }
 
       statusEl.className = 'text-xs p-2.5 rounded-xl bg-slate-100 text-slate-700';
-      statusEl.textContent = 'Menyiapkan kamera... Arahkan ke QR Resmi Semua Rumah Jimpitan Sewan.';
+      statusEl.textContent = 'Menyiapkan kamera...';
       modal.classList.remove('hidden');
       modal.classList.add('flex');
 
-      setTimeout(() => {
-        if (!window.Html5Qrcode) {
-          statusEl.textContent = 'Pustaka kamera belum siap, silakan unggah foto QR dari galeri di bawah.';
-          return;
-        }
-        html5QrInstance = new Html5Qrcode('qrReaderBox');
-        html5QrInstance.start(
-          { facingMode: 'environment' },
-          { fps: 10, qrbox: { width: 220, height: 220 } },
-          (decodedText) => {
-            handleScannedText(decodedText);
-          },
-          () => {}
-        ).catch(() => {
-          statusEl.className = 'text-xs p-2.5 rounded-xl bg-amber-50 text-amber-800';
-          statusEl.textContent = 'Kamera tidak dapat dibuka otomatis. Izinkan akses kamera atau pilih gambar QR dari galeri di bawah.';
-        });
-      }, 200);
-    }
+      if (!window.Html5Qrcode) {
+        statusEl.className = 'text-xs p-2.5 rounded-xl bg-amber-50 text-amber-800';
+        statusEl.textContent = 'Pustaka scanner gagal dimuat. Periksa koneksi internet atau pilih gambar QR dari galeri.';
+        return;
+      }
 
-    function closeScannerModal() {
-      const modal = document.getElementById('scannerModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-      if (html5QrInstance) {
-        html5QrInstance.stop().then(() => html5QrInstance.clear()).catch(() => {});
-        html5QrInstance = null;
+      try {
+        availableCameras = await Html5Qrcode.getCameras();
+      } catch {
+        availableCameras = [];
+      }
+
+      if (availableCameras.length > 0) {
+        const backIdx = availableCameras.findIndex(c => /back|rear|environment|belakang/i.test(c.label));
+        currentCameraIdx = backIdx >= 0 ? backIdx : 0;
+        await startCameraStream(availableCameras[currentCameraIdx].id);
+      } else {
+        await startCameraStream({ facingMode: 'environment' });
       }
     }
 
-    function scanQrFromFile(event) {
+    async function switchCameraDevice() {
+      if (availableCameras.length > 1) {
+        currentCameraIdx = (currentCameraIdx + 1) % availableCameras.length;
+        await startCameraStream(availableCameras[currentCameraIdx].id);
+      } else {
+        await startCameraStream({ facingMode: 'environment' });
+      }
+    }
+
+    async function closeScannerModal() {
+      const modal = document.getElementById('scannerModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      await stopAndClearScanner();
+    }
+
+    async function scanQrFromFile(event) {
       const file = event.target.files?.[0];
       if (!file || !window.Html5Qrcode) return;
       const statusEl = document.getElementById('scanStatusMsg');
-      const fileScanner = new Html5Qrcode('qrReaderBox');
-      fileScanner.scanFile(file, true)
-        .then(decodedText => {
-          handleScannedText(decodedText);
-        })
-        .catch(() => {
-          statusEl.className = 'text-xs p-2.5 rounded-xl bg-red-100 text-red-700 font-semibold';
-          statusEl.textContent = '⛔ Gambar tidak memuat QR yang terbaca atau bukan QR resmi Jimpitan Sewan.';
-        });
+      statusEl.className = 'text-xs p-2.5 rounded-xl bg-slate-100 text-slate-700';
+      statusEl.textContent = 'Membaca gambar QR dari galeri...';
+
+      try {
+        if (!fileQrInstance) {
+          fileQrInstance = new Html5Qrcode('qrFileTempBox');
+        }
+        const decodedText = await fileQrInstance.scanFile(file, true);
+        await handleScannedText(decodedText);
+      } catch {
+        statusEl.className = 'text-xs p-2.5 rounded-xl bg-red-100 text-red-700 font-semibold';
+        statusEl.textContent = '⛔ Gambar tidak memuat QR yang terbaca atau bukan QR resmi Jimpitan Sewan.';
+      }
     }
 
     function openConfirmPaymentModal(preselectedRumahId = null) {
