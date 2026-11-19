@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Jimpitan Sewan — Sistem Kas Mingguan & Bulanan</title>
+  <title>Jimpitan Sewan — Sistem Kas Mingguan & Bulanan + Scan QR</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     @media print {
       .no-print { display: none !important; }
@@ -72,12 +74,15 @@
           <p id="sessionInfo" class="text-xs text-emerald-100"></p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
+          <button onclick="openScannerModal(null)" class="bg-amber-400 hover:bg-amber-300 text-slate-900 text-xs font-bold px-3 py-2 rounded-lg shadow-sm flex items-center gap-1">
+            📷 Scan QR Rumah
+          </button>
           <div class="bg-emerald-800/80 rounded-lg px-2.5 py-1 text-xs">
-            <span>Periode Minggu:</span>
+            <span>Minggu:</span>
             <input id="activeWeekInput" type="week" class="bg-transparent text-white font-semibold focus:outline-none ml-1" />
           </div>
           <div class="bg-emerald-800/80 rounded-lg px-2.5 py-1 text-xs">
-            <span>Bulan Rekap:</span>
+            <span>Bulan:</span>
             <input id="activeMonthInput" type="month" class="bg-transparent text-white font-semibold focus:outline-none ml-1" />
           </div>
           <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-lg">
@@ -146,6 +151,38 @@
             </thead>
             <tbody id="rumahTableBody" class="divide-y divide-slate-100"></tbody>
           </table>
+        </div>
+      </section>
+
+      <!-- TAB QR SEMUA RUMAH (GAMBAR QR ASLI TERKUNCI KHUSUS APLIKASI & SIAP UNDUH) -->
+      <section id="tab-qr-cards" class="tab-panel hidden space-y-4">
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3 no-print">
+          <div>
+            <h2 class="font-bold text-base">Gambar QR Resmi Semua Rumah (Siap Unduh)</h2>
+            <p class="text-xs text-slate-500">QR asli bertanda tangan khusus Jimpitan Sewan untuk semua rumah (RT 37 & RT 38). Unduh gambar lalu gunakan untuk scan sebelum konfirmasi bayar.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="downloadAllHousesQrImage('png')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl">
+              ⬇️ Unduh QR (.PNG)
+            </button>
+            <button onclick="downloadAllHousesQrImage('jpg')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl">
+              ⬇️ Unduh QR (.JPG)
+            </button>
+            <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl">
+              🖨️ Cetak QR
+            </button>
+          </div>
+        </div>
+
+        <div class="flex justify-center">
+          <div id="allHousesQrCard" class="bg-white rounded-2xl border-2 border-emerald-700 p-6 max-w-md w-full flex flex-col items-center text-center space-y-3 print-card shadow-sm">
+            <span class="text-xs font-bold tracking-wider uppercase text-emerald-700">JIMPITAN SEWAN • QR RESMI SEMUA RUMAH</span>
+            <h3 class="text-lg font-extrabold text-slate-900">QR JIMPITAN SEMUA RUMAH</h3>
+            <p class="text-xs font-semibold text-slate-600">Wilayah RT 37 & RT 38</p>
+            <div id="allHousesQrCanvas" class="p-3 bg-white rounded-xl border border-slate-200"></div>
+            <p id="allHousesQrSummary" class="text-xs font-semibold text-emerald-800"></p>
+            <p class="text-[11px] text-slate-400">Terkunci khusus untuk pemindaian di Aplikasi Jimpitan Sewan</p>
+          </div>
         </div>
       </section>
 
@@ -273,7 +310,7 @@
         </div>
       </section>
 
-      <!-- TAB KHUSUS PETUGAS (RT 37 / RT 38): RUMAH RT, BUAT, CETAK & EXPORT LAPORAN MINGGUAN -->
+      <!-- TAB KHUSUS PETUGAS (RT 37 / RT 38): SCAN QR, RUMAH RT, BUAT, CETAK & EXPORT LAPORAN MINGGUAN -->
       <section id="tab-petugas" class="tab-panel hidden space-y-4">
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-2">
@@ -281,16 +318,21 @@
               <h2 id="petugasTitle" class="font-bold text-base">Laporan Mingguan Petugas</h2>
               <p id="petugasSubtitle" class="text-xs text-slate-500">Menampilkan rumah & laporan pada wilayah RT yang ditugaskan.</p>
             </div>
-            <div class="text-right">
-              <p class="text-xs text-slate-500">Total Minggu Ini</p>
-              <p id="petugasMingguTotal" class="text-xl font-bold text-emerald-700">Rp 0</p>
+            <div class="flex items-center gap-3">
+              <button onclick="openScannerModal(null)" class="bg-amber-400 hover:bg-amber-300 text-slate-900 text-xs sm:text-sm font-bold px-3.5 py-2 rounded-xl shadow-sm no-print">
+                📷 Scan QR Rumah
+              </button>
+              <div class="text-right">
+                <p class="text-xs text-slate-500">Total Minggu Ini</p>
+                <p id="petugasMingguTotal" class="text-xl font-bold text-emerald-700">Rp 0</p>
+              </div>
             </div>
           </div>
 
           <!-- Daftar Rumah Khusus RT Petugas -->
           <div class="border-t border-slate-100 pt-3 space-y-2 no-print">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <h3 class="font-semibold text-sm text-slate-800">Daftar Rumah Wilayah Anda</h3>
+              <h3 class="font-semibold text-sm text-slate-800">Daftar Rumah Wilayah Anda (Klik Ambil -> Scan QR)</h3>
               <input id="searchPetugasRumah" oninput="renderLaporanPetugas()" type="text" placeholder="Cari rumah di RT Anda..." class="rounded-xl border border-slate-300 px-3 py-1.5 text-xs sm:text-sm w-full sm:w-60" />
             </div>
             <div class="overflow-x-auto border rounded-xl">
@@ -408,6 +450,60 @@
     </main>
   </div>
 
+  <!-- MODAL SCAN QR KHUSUS JIMPITAN SEWAN -->
+  <div id="scannerModal" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-40">
+    <div class="bg-white rounded-2xl w-full max-w-md p-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="font-bold text-lg text-slate-900">Scan QR Semua Rumah</h3>
+          <p id="scannerTargetInfo" class="text-xs text-slate-500">Wajib scan QR resmi Jimpitan Sewan sebelum konfirmasi bayar</p>
+        </div>
+        <button onclick="closeScannerModal()" class="px-3 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold">Tutup</button>
+      </div>
+
+      <div id="qrReaderBox" class="w-full rounded-xl overflow-hidden bg-slate-900 min-h-[240px]"></div>
+
+      <div id="scanStatusMsg" class="text-xs p-2.5 rounded-xl bg-slate-100 text-slate-700">
+        Arahkan kamera ke QR Resmi Semua Rumah Jimpitan Sewan...
+      </div>
+
+      <div class="pt-2 border-t border-slate-100 space-y-2">
+        <label class="block text-xs font-medium text-slate-600">Atau pilih gambar QR dari galeri HP:</label>
+        <input id="qrFileInput" type="file" accept="image/*" onchange="scanQrFromFile(event)" class="w-full text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-emerald-50 file:text-emerald-700 file:font-semibold" />
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL KONFIRMASI BAYAR / AMBIL SETELAH SCAN QR SUKSES -->
+  <div id="confirmPaymentModal" class="fixed inset-0 bg-black/65 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl w-full max-w-md p-5 space-y-4">
+      <div class="flex items-center justify-between border-b pb-2">
+        <div>
+          <span class="text-[11px] font-bold uppercase text-emerald-700">✅ QR Terverifikasi • Konfirmasi Bayar</span>
+          <h3 class="font-bold text-lg text-slate-900">Konfirmasi Ambil Jimpitan</h3>
+        </div>
+        <button onclick="closeConfirmPaymentModal()" class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold">Batal</button>
+      </div>
+
+      <form id="confirmPaymentForm" class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium mb-1">Pilih Rumah</label>
+          <select id="confirmRumahSelect" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium mb-1">Nominal Bayar / Diambil (Rp)</label>
+          <input id="confirmNominalInput" type="number" min="100" step="100" required value="2000" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold" />
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeConfirmPaymentModal()" class="px-4 py-2 rounded-xl border text-sm">Batal</button>
+          <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold">
+            Konfirmasi & Simpan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- MODAL TAMBAH/EDIT RUMAH -->
   <div id="rumahModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-30">
     <div class="bg-white rounded-2xl w-full max-w-md p-5 space-y-4">
@@ -423,7 +519,7 @@
         </div>
         <div>
           <label class="block text-xs font-medium mb-1">Kode / Nomor Rumah</label>
-          <input id="rumahKode" type="text" required placeholder="Contoh: R-01" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+          <input id="rumahKode" type="text" required placeholder="Contoh: 37-01" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
         </div>
         <div>
           <label class="block text-xs font-medium mb-1">Nama Pemilik Rumah</label>
@@ -456,7 +552,7 @@
         </div>
         <div>
           <label class="block text-xs font-medium mb-1">Keterangan / Rumah</label>
-          <input id="trxKet" type="text" required placeholder="Contoh: Jimpitan R-01 / Beli buku kas" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+          <input id="trxKet" type="text" required placeholder="Contoh: Jimpitan 37-01 / Beli buku kas" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
         </div>
         <div>
           <label class="block text-xs font-medium mb-1">Nominal (Rp)</label>
@@ -473,6 +569,41 @@
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbzOWRfhfq52jdvuIu6hNYz2lo0khEIixVD4vMhh0X1nMoEZZnp_jRdQNoxrXRFCjEIiww/exec';
     const STORAGE_KEY = 'jimpitan_sewan_v1';
+    const QR_APP_MAGIC = 'JIMPITAN_SEWAN_ALL_HOUSES_V1';
+    const QR_APP_SECRET = 'SEWAN_ALL_HOUSES_LOCK_2026';
+
+    function computeAllHousesQrSignature() {
+      const raw = `${QR_APP_MAGIC}|ALL_HOUSES|${QR_APP_SECRET}`;
+      let hash = 5381;
+      for (let i = 0; i < raw.length; i++) {
+        hash = ((hash << 5) + hash) + raw.charCodeAt(i);
+        hash = hash & 0xffffffff;
+      }
+      return Math.abs(hash).toString(16).toUpperCase().padStart(8, '0');
+    }
+
+    function buildAllHousesQrPayload() {
+      return JSON.stringify({
+        app: QR_APP_MAGIC,
+        scope: 'ALL_HOUSES',
+        sig: computeAllHousesQrSignature()
+      });
+    }
+
+    function verifyAllHousesQrPayload(decodedText) {
+      try {
+        const parsed = JSON.parse(decodedText);
+        if (!parsed || parsed.app !== QR_APP_MAGIC || parsed.scope !== 'ALL_HOUSES' || !parsed.sig) {
+          return { valid: false, reason: 'QR tidak dikenali! Bukan QR resmi semua rumah Jimpitan Sewan.' };
+        }
+        if (parsed.sig !== computeAllHousesQrSignature()) {
+          return { valid: false, reason: 'Tanda tangan keamanan QR tidak cocok (QR tidak sah).' };
+        }
+        return { valid: true };
+      } catch {
+        return { valid: false, reason: 'Format QR ditolak! Hanya QR resmi Jimpitan Sewan yang dapat dipindai.' };
+      }
+    }
 
     function getCurrentISOWeek() {
       const now = new Date();
@@ -511,6 +642,8 @@
     let activeWeek = getCurrentISOWeek();
     let activeMonth = getCurrentMonth();
     let currentTab = 'rumah';
+    let html5QrInstance = null;
+    let pendingScanRumahId = null;
 
     function loadLocalState() {
       try {
@@ -592,6 +725,8 @@
     });
 
     function logout() {
+      closeScannerModal();
+      closeConfirmPaymentModal();
       currentUser = null;
       document.getElementById('appScreen').classList.add('hidden');
       document.getElementById('loginScreen').classList.remove('hidden');
@@ -634,6 +769,7 @@
         ? [{ id: 'petugas', label: `📝 Laporan Mingguan (${currentUser.rt})` }]
         : [
             { id: 'rumah', label: '🏠 Rumah', roles: ['admin', 'bendahara'] },
+            { id: 'qr-cards', label: '🪪 QR Semua Rumah', roles: ['admin', 'bendahara'] },
             { id: 'masuk', label: '💰 Uang Terkumpul', roles: ['admin', 'bendahara'] },
             { id: 'keluar', label: '📤 Uang Keluar', roles: ['admin', 'bendahara'] },
             { id: 'rekap-petugas', label: '👥 Rekap Petugas', roles: ['admin', 'bendahara'] },
@@ -668,6 +804,7 @@
         }`;
       });
 
+      if (tabId === 'qr-cards') renderAllHousesQr();
       if (tabId === 'laporan') renderReportPreview();
       if (tabId === 'akun') renderAkun();
       if (tabId === 'rekap-petugas') renderRekapPetugas();
@@ -683,8 +820,218 @@
       renderRekapPetugas();
       renderBulanan();
       renderLaporanPetugas();
+      if (currentTab === 'qr-cards') renderAllHousesQr();
       if (currentTab === 'laporan') renderReportPreview();
     }
+
+    // --- QR SEMUA RUMAH SIAP UNDUH (.PNG / .JPG) ---
+    function renderAllHousesQr() {
+      const container = document.getElementById('allHousesQrCanvas');
+      const summary = document.getElementById('allHousesQrSummary');
+      if (!container) return;
+
+      const rt37Count = state.rumah.filter(r => r.rt === 'RT 37').length;
+      const rt38Count = state.rumah.filter(r => r.rt === 'RT 38').length;
+      if (summary) {
+        summary.textContent = `Mencakup ${state.rumah.length} rumah terdaftar (${rt37Count} rumah RT 37 • ${rt38Count} rumah RT 38)`;
+      }
+
+      container.innerHTML = '';
+      if (window.QRCode) {
+        new QRCode(container, {
+          text: buildAllHousesQrPayload(),
+          width: 220,
+          height: 220,
+          colorDark: '#0f172a',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      }
+    }
+
+    function downloadAllHousesQrImage(ext = 'jpg') {
+      renderAllHousesQr();
+      setTimeout(() => {
+        const card = document.getElementById('allHousesQrCard');
+        const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+        html2canvas(card, { backgroundColor: '#ffffff', scale: 2 }).then(canvas => {
+          const link = document.createElement('a');
+          link.download = `QR-Semua-Rumah-Jimpitan-Sewan.${ext}`;
+          link.href = canvas.toDataURL(mime, 0.95);
+          link.click();
+        });
+      }, 150);
+    }
+
+    function requestAmbilWithQr(rumahId = null) {
+      if (rumahId !== null) {
+        const rumah = state.rumah.find(r => r.id === rumahId);
+        if (!rumah) return;
+        const key = `${activeWeek}_${rumahId}`;
+        if (state.pickups[key]) {
+          alert(`Rumah ${rumah.kode} (${rumah.pemilik}) sudah tercatat diambil pada minggu ${activeWeek} sebesar ${formatRp(state.pickups[key].nominal)}.`);
+          return;
+        }
+        if (currentUser && currentUser.role === 'petugas' && currentUser.rt && rumah.rt !== currentUser.rt) {
+          alert(`Rumah ${rumah.kode} milik ${rumah.rt}, bukan wilayah tugas Anda (${currentUser.rt}).`);
+          return;
+        }
+      }
+      openScannerModal(rumahId);
+    }
+
+    function handleScannedText(decodedText) {
+      const check = verifyAllHousesQrPayload(decodedText);
+      const statusEl = document.getElementById('scanStatusMsg');
+
+      if (!check.valid) {
+        statusEl.className = 'text-xs p-2.5 rounded-xl bg-red-100 text-red-700 font-semibold';
+        statusEl.textContent = '⛔ ' + check.reason;
+        return;
+      }
+
+      const targetId = pendingScanRumahId;
+      statusEl.className = 'text-xs p-2.5 rounded-xl bg-emerald-100 text-emerald-800 font-semibold';
+      statusEl.textContent = '✅ QR Semua Rumah valid! Membuka konfirmasi bayar...';
+      closeScannerModal();
+      openConfirmPaymentModal(targetId);
+    }
+
+    function openScannerModal(targetRumahId = null) {
+      pendingScanRumahId = targetRumahId;
+      const modal = document.getElementById('scannerModal');
+      const statusEl = document.getElementById('scanStatusMsg');
+      const targetInfo = document.getElementById('scannerTargetInfo');
+
+      if (targetRumahId !== null) {
+        const r = state.rumah.find(item => item.id === targetRumahId);
+        targetInfo.textContent = r
+          ? `Scan QR untuk konfirmasi bayar: ${r.kode} (${r.rt}) - ${r.pemilik}`
+          : 'Wajib scan QR resmi Jimpitan Sewan sebelum konfirmasi bayar';
+      } else {
+        targetInfo.textContent = 'Wajib scan QR resmi Jimpitan Sewan sebelum konfirmasi bayar';
+      }
+
+      statusEl.className = 'text-xs p-2.5 rounded-xl bg-slate-100 text-slate-700';
+      statusEl.textContent = 'Menyiapkan kamera... Arahkan ke QR Resmi Semua Rumah Jimpitan Sewan.';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      setTimeout(() => {
+        if (!window.Html5Qrcode) {
+          statusEl.textContent = 'Pustaka kamera belum siap, silakan unggah foto QR dari galeri di bawah.';
+          return;
+        }
+        html5QrInstance = new Html5Qrcode('qrReaderBox');
+        html5QrInstance.start(
+          { facingMode: 'environment' },
+          { fps: 10, qrbox: { width: 220, height: 220 } },
+          (decodedText) => {
+            handleScannedText(decodedText);
+          },
+          () => {}
+        ).catch(() => {
+          statusEl.className = 'text-xs p-2.5 rounded-xl bg-amber-50 text-amber-800';
+          statusEl.textContent = 'Kamera tidak dapat dibuka otomatis. Izinkan akses kamera atau pilih gambar QR dari galeri di bawah.';
+        });
+      }, 200);
+    }
+
+    function closeScannerModal() {
+      const modal = document.getElementById('scannerModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      if (html5QrInstance) {
+        html5QrInstance.stop().then(() => html5QrInstance.clear()).catch(() => {});
+        html5QrInstance = null;
+      }
+    }
+
+    function scanQrFromFile(event) {
+      const file = event.target.files?.[0];
+      if (!file || !window.Html5Qrcode) return;
+      const statusEl = document.getElementById('scanStatusMsg');
+      const fileScanner = new Html5Qrcode('qrReaderBox');
+      fileScanner.scanFile(file, true)
+        .then(decodedText => {
+          handleScannedText(decodedText);
+        })
+        .catch(() => {
+          statusEl.className = 'text-xs p-2.5 rounded-xl bg-red-100 text-red-700 font-semibold';
+          statusEl.textContent = '⛔ Gambar tidak memuat QR yang terbaca atau bukan QR resmi Jimpitan Sewan.';
+        });
+    }
+
+    function openConfirmPaymentModal(preselectedRumahId = null) {
+      const select = document.getElementById('confirmRumahSelect');
+      const availableHouses = state.rumah.filter(r => {
+        if (currentUser && currentUser.role === 'petugas' && currentUser.rt && r.rt !== currentUser.rt) {
+          return false;
+        }
+        return !state.pickups[`${activeWeek}_${r.id}`];
+      });
+
+      if (!availableHouses.length) {
+        alert('Semua rumah pada wilayah ini sudah tercatat diambil pada minggu aktif.');
+        return;
+      }
+
+      select.innerHTML = availableHouses.map(r =>
+        `<option value="${r.id}">${r.kode} (${r.rt}) - ${r.pemilik}</option>`
+      ).join('');
+
+      if (preselectedRumahId && availableHouses.some(r => String(r.id) === String(preselectedRumahId))) {
+        select.value = String(preselectedRumahId);
+      }
+
+      document.getElementById('confirmNominalInput').value = '2000';
+      const modal = document.getElementById('confirmPaymentModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeConfirmPaymentModal() {
+      pendingScanRumahId = null;
+      const modal = document.getElementById('confirmPaymentModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    document.getElementById('confirmPaymentForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const rumahId = Number(document.getElementById('confirmRumahSelect').value);
+      const nominal = Number(document.getElementById('confirmNominalInput').value);
+      const rumah = state.rumah.find(r => r.id === rumahId);
+
+      if (!rumah || !nominal || nominal <= 0) {
+        alert('Pilih rumah dan masukkan nominal yang valid.');
+        return;
+      }
+
+      const key = `${activeWeek}_${rumahId}`;
+      if (state.pickups[key]) {
+        alert('Rumah ini sudah tercatat diambil pada minggu ini.');
+        return;
+      }
+
+      const tanggal = new Date().toISOString().slice(0, 10);
+      state.pickups[key] = { nominal, tanggal, rt: rumah.rt || 'RT 37', petugas: currentUser.username };
+
+      state.masuk.unshift({
+        id: 'pk_' + Date.now() + '_' + rumahId,
+        pickupKey: key,
+        tanggal,
+        week: activeWeek,
+        rt: rumah.rt || 'RT 37',
+        keterangan: `Jimpitan ${rumah.kode} - ${rumah.pemilik}`,
+        petugas: currentUser.username,
+        nominal
+      });
+
+      saveState();
+      closeConfirmPaymentModal();
+      renderAll();
+    });
 
     function getScopedRumah() {
       if (currentUser && currentUser.role === 'petugas' && currentUser.rt) {
@@ -721,7 +1068,6 @@
       const statusFilter = document.getElementById('filterStatusRumah')?.value || 'all';
       const isAdmin = currentUser && currentUser.role === 'admin';
 
-      // Bendahara tidak memiliki fitur tambah/edit/hapus rumah
       document.getElementById('adminRumahActions').classList.toggle('hidden', !isAdmin);
 
       const rows = state.rumah.filter(r => {
@@ -757,7 +1103,7 @@
             <td class="py-3 px-4 no-print">
               <div class="flex flex-wrap gap-1.5">
                 ${!picked
-                  ? `<button onclick="ambilJimpitan(${r.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg">Ambil</button>`
+                  ? `<button onclick="requestAmbilWithQr(${r.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg">Ambil (Scan QR)</button>`
                   : `<button onclick="batalJimpitan(${r.id})" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg">Batal</button>`
                 }
                 ${isAdmin ? `
@@ -769,36 +1115,6 @@
           </tr>
         `;
       }).join('');
-    }
-
-    function ambilJimpitan(rumahId) {
-      const rumah = state.rumah.find(r => r.id === rumahId);
-      if (!rumah) return;
-      const input = prompt(`Nominal jimpitan ${rumah.kode} (${rumah.rt} - ${rumah.pemilik}) untuk minggu ${activeWeek}:`, '2000');
-      if (input === null) return;
-      const nominal = Number(input);
-      if (!nominal || nominal <= 0) {
-        alert('Nominal harus lebih dari 0.');
-        return;
-      }
-
-      const tanggal = new Date().toISOString().slice(0, 10);
-      const key = `${activeWeek}_${rumahId}`;
-      state.pickups[key] = { nominal, tanggal, rt: rumah.rt || 'RT 37', petugas: currentUser.username };
-
-      state.masuk.unshift({
-        id: 'pk_' + Date.now() + '_' + rumahId,
-        pickupKey: key,
-        tanggal,
-        week: activeWeek,
-        rt: rumah.rt || 'RT 37',
-        keterangan: `Jimpitan ${rumah.kode} - ${rumah.pemilik}`,
-        petugas: currentUser.username,
-        nominal
-      });
-
-      saveState();
-      renderAll();
     }
 
     function batalJimpitan(rumahId) {
@@ -1095,7 +1411,6 @@
       document.getElementById('petugasTitle').textContent = `Laporan Mingguan Petugas (${rt})`;
       document.getElementById('petugasSubtitle').textContent = `Khusus wilayah ${rt}: hanya rumah & laporan ${rt} yang ditampilkan.`;
 
-      // Render daftar rumah khusus RT petugas
       const rtHouses = state.rumah.filter(r =>
         r.rt === rt && (r.kode.toLowerCase().includes(searchRumah) || r.pemilik.toLowerCase().includes(searchRumah))
       );
@@ -1119,7 +1434,7 @@
               <td class="py-2 px-3 font-semibold">${picked ? formatRp(picked.nominal) : '-'}</td>
               <td class="py-2 px-3">
                 ${!picked
-                  ? `<button onclick="ambilJimpitan(${r.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-2.5 py-1 rounded-lg">Ambil</button>`
+                  ? `<button onclick="requestAmbilWithQr(${r.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-2.5 py-1 rounded-lg">Ambil (Scan QR)</button>`
                   : `<button onclick="batalJimpitan(${r.id})" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-lg">Batal</button>`
                 }
               </td>
@@ -1128,7 +1443,6 @@
         }).join('');
       }
 
-      // Render laporan mingguan khusus RT petugas
       const list = getWeeklyPickups(currentUser?.role === 'petugas' ? rt : null);
       const total = list.reduce((sum, item) => sum + Number(item.nominal || 0), 0);
       document.getElementById('petugasMingguTotal').textContent = formatRp(total);
