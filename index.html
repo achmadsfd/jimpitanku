@@ -22,16 +22,17 @@
       <div class="text-center mb-6">
         <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-600 text-white font-bold text-xl mb-2">JS</div>
         <h1 class="text-2xl font-bold text-slate-900">Jimpitan Sewan</h1>
-        <p class="text-sm text-slate-500">Pendataan Mingguan & Rekapan Bulanan</p>
+        <p class="text-sm text-slate-500">Pendataan Mingguan & Rekapan Bulanan (RT 37 & RT 38)</p>
       </div>
 
       <form id="loginForm" class="space-y-4">
         <div>
           <label class="block text-sm font-medium mb-1">Peran Akun</label>
-          <select id="loginRole" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          <select id="loginRole" onchange="onLoginRoleChange()" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
             <option value="admin">Admin Utama</option>
             <option value="bendahara">Bendahara</option>
-            <option value="petugas">Petugas Pengambil Jimpitan</option>
+            <option value="petugas_rt37">Petugas RT 37</option>
+            <option value="petugas_rt38">Petugas RT 38</option>
           </select>
         </div>
 
@@ -56,7 +57,8 @@
         <p class="font-semibold text-slate-700">Akun Bawaan (bisa diubah di menu Akun):</p>
         <p>• Admin Utama: <span class="font-mono">admin</span> / <span class="font-mono">admin123</span></p>
         <p>• Bendahara: <span class="font-mono">bendahara</span> / <span class="font-mono">bendahara123</span></p>
-        <p>• Petugas: <span class="font-mono">petugas</span> / <span class="font-mono">petugas123</span></p>
+        <p>• Petugas RT 37: <span class="font-mono">petugas37</span> / <span class="font-mono">petugas37</span></p>
+        <p>• Petugas RT 38: <span class="font-mono">petugas38</span> / <span class="font-mono">petugas38</span></p>
       </div>
     </div>
   </div>
@@ -69,10 +71,14 @@
           <h1 class="font-bold text-lg leading-tight">Jimpitan Sewan</h1>
           <p id="sessionInfo" class="text-xs text-emerald-100"></p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
           <div class="bg-emerald-800/80 rounded-lg px-2.5 py-1 text-xs">
             <span>Periode Minggu:</span>
             <input id="activeWeekInput" type="week" class="bg-transparent text-white font-semibold focus:outline-none ml-1" />
+          </div>
+          <div class="bg-emerald-800/80 rounded-lg px-2.5 py-1 text-xs">
+            <span>Bulan Rekap:</span>
+            <input id="activeMonthInput" type="month" class="bg-transparent text-white font-semibold focus:outline-none ml-1" />
           </div>
           <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-lg">
             Keluar
@@ -83,9 +89,10 @@
     </header>
 
     <main id="exportArea" class="max-w-6xl w-full mx-auto px-4 py-5 flex-1 space-y-6">
+      <!-- STATISTIK RINGKAS -->
       <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm print-card">
-          <p class="text-xs text-slate-500">Total Rumah</p>
+          <p class="text-xs text-slate-500" id="labelStatRumah">Total Rumah</p>
           <p id="statTotalRumah" class="text-2xl font-bold text-slate-900 mt-1">0</p>
         </div>
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm print-card">
@@ -102,10 +109,16 @@
         </div>
       </section>
 
+      <!-- TAB RUMAH (ADMIN & BENDAHARA) -->
       <section id="tab-rumah" class="tab-panel space-y-4">
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3 no-print">
           <div class="flex flex-wrap items-center gap-2 flex-1">
-            <input id="searchRumah" oninput="renderRumah()" type="text" placeholder="Cari kode rumah / nama pemilik..." class="rounded-xl border border-slate-300 px-3 py-2 text-sm w-full sm:w-64" />
+            <input id="searchRumah" oninput="renderRumah()" type="text" placeholder="Cari kode rumah / nama pemilik..." class="rounded-xl border border-slate-300 px-3 py-2 text-sm w-full sm:w-56" />
+            <select id="filterRtRumah" onchange="renderRumah()" class="rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white">
+              <option value="all">Semua RT (37 & 38)</option>
+              <option value="RT 37">RT 37</option>
+              <option value="RT 38">RT 38</option>
+            </select>
             <select id="filterStatusRumah" onchange="renderRumah()" class="rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white">
               <option value="all">Semua Status Minggu Ini</option>
               <option value="sudah">Sudah Diambil</option>
@@ -124,6 +137,7 @@
             <thead class="bg-slate-50 text-slate-600 border-b">
               <tr>
                 <th class="py-3 px-4">No / Kode</th>
+                <th class="py-3 px-4">RT</th>
                 <th class="py-3 px-4">Nama Pemilik Rumah</th>
                 <th class="py-3 px-4">Status Minggu Ini</th>
                 <th class="py-3 px-4">Nominal Diambil</th>
@@ -135,6 +149,7 @@
         </div>
       </section>
 
+      <!-- TAB UANG TERKUMPUL -->
       <section id="tab-masuk" class="tab-panel hidden space-y-4">
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -152,6 +167,7 @@
               <tr>
                 <th class="py-3 px-4">Tanggal</th>
                 <th class="py-3 px-4">Minggu</th>
+                <th class="py-3 px-4">RT</th>
                 <th class="py-3 px-4">Rumah / Keterangan</th>
                 <th class="py-3 px-4">Petugas</th>
                 <th class="py-3 px-4 text-right">Nominal</th>
@@ -163,6 +179,7 @@
         </div>
       </section>
 
+      <!-- TAB UANG KELUAR -->
       <section id="tab-keluar" class="tab-panel hidden space-y-4">
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -179,6 +196,7 @@
             <thead class="bg-slate-50 text-slate-600 border-b">
               <tr>
                 <th class="py-3 px-4">Tanggal</th>
+                <th class="py-3 px-4">RT</th>
                 <th class="py-3 px-4">Keperluan / Keterangan</th>
                 <th class="py-3 px-4">Dicatat Oleh</th>
                 <th class="py-3 px-4 text-right">Nominal</th>
@@ -190,10 +208,53 @@
         </div>
       </section>
 
+      <!-- TAB REKAP PER PETUGAS -->
+      <section id="tab-rekap-petugas" class="tab-panel hidden space-y-4">
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3 no-print">
+          <div>
+            <h2 class="font-bold text-base">Rekap Per Petugas Pengambil Jimpitan</h2>
+            <p class="text-xs text-slate-500">Ringkasan setoran dan nominal tiap petugas berdasarkan RT.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="rekapPetugasRt" onchange="renderRekapPetugas()" class="rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white">
+              <option value="all">Semua RT</option>
+              <option value="RT 37">RT 37</option>
+              <option value="RT 38">RT 38</option>
+            </select>
+            <select id="rekapPetugasScope" onchange="renderRekapPetugas()" class="rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white">
+              <option value="week">Minggu Aktif</option>
+              <option value="all">Semua Waktu</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto print-card">
+          <table class="w-full text-sm text-left">
+            <thead class="bg-slate-50 text-slate-600 border-b">
+              <tr>
+                <th class="py-3 px-4">Nama / Akun Petugas</th>
+                <th class="py-3 px-4">Wilayah RT</th>
+                <th class="py-3 px-4 text-center">Jumlah Setoran</th>
+                <th class="py-3 px-4 text-right">Total Terkumpul</th>
+              </tr>
+            </thead>
+            <tbody id="rekapPetugasBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB REKAPAN BULANAN -->
       <section id="tab-bulanan" class="tab-panel hidden space-y-4">
-        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-          <h2 class="font-bold text-base">Rekapan Kas Per Bulan</h2>
-          <p class="text-xs text-slate-500">Akumulasi uang terkumpul, uang keluar, dan saldo bersih setiap bulan.</p>
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 class="font-bold text-base">Rekapan Kas Per Bulan</h2>
+            <p class="text-xs text-slate-500">Akumulasi uang terkumpul, uang keluar, dan saldo bersih setiap bulan per RT atau gabungan.</p>
+          </div>
+          <select id="bulananRtFilter" onchange="renderBulanan()" class="rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white no-print">
+            <option value="all">Gabungan Kedua RT (RT 37 & 38)</option>
+            <option value="RT 37">Khusus RT 37</option>
+            <option value="RT 38">Khusus RT 38</option>
+          </select>
         </div>
 
         <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto print-card">
@@ -201,6 +262,7 @@
             <thead class="bg-slate-50 text-slate-600 border-b">
               <tr>
                 <th class="py-3 px-4">Bulan</th>
+                <th class="py-3 px-4">Wilayah</th>
                 <th class="py-3 px-4 text-right">Uang Terkumpul</th>
                 <th class="py-3 px-4 text-right">Uang Keluar</th>
                 <th class="py-3 px-4 text-right">Saldo Bulan Ini</th>
@@ -211,26 +273,83 @@
         </div>
       </section>
 
+      <!-- TAB KHUSUS PETUGAS (RT 37 / RT 38): RUMAH RT, BUAT, CETAK & EXPORT LAPORAN MINGGUAN -->
       <section id="tab-petugas" class="tab-panel hidden space-y-4">
-        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h2 class="font-bold text-base">Laporan Uang Terkumpul Minggu Ini</h2>
-            <p class="text-xs text-slate-500">Rekap pengambilan jimpitan pada minggu yang sedang aktif dipilih di atas.</p>
+        <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 id="petugasTitle" class="font-bold text-base">Laporan Mingguan Petugas</h2>
+              <p id="petugasSubtitle" class="text-xs text-slate-500">Menampilkan rumah & laporan pada wilayah RT yang ditugaskan.</p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs text-slate-500">Total Minggu Ini</p>
+              <p id="petugasMingguTotal" class="text-xl font-bold text-emerald-700">Rp 0</p>
+            </div>
           </div>
-          <div class="text-right">
-            <p class="text-xs text-slate-500">Total Terkumpul Minggu Ini</p>
-            <p id="petugasMingguTotal" class="text-xl font-bold text-emerald-700">Rp 0</p>
+
+          <!-- Daftar Rumah Khusus RT Petugas -->
+          <div class="border-t border-slate-100 pt-3 space-y-2 no-print">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h3 class="font-semibold text-sm text-slate-800">Daftar Rumah Wilayah Anda</h3>
+              <input id="searchPetugasRumah" oninput="renderLaporanPetugas()" type="text" placeholder="Cari rumah di RT Anda..." class="rounded-xl border border-slate-300 px-3 py-1.5 text-xs sm:text-sm w-full sm:w-60" />
+            </div>
+            <div class="overflow-x-auto border rounded-xl">
+              <table class="w-full text-xs sm:text-sm text-left">
+                <thead class="bg-slate-50 text-slate-600 border-b">
+                  <tr>
+                    <th class="py-2 px-3">Kode</th>
+                    <th class="py-2 px-3">Nama Pemilik Rumah</th>
+                    <th class="py-2 px-3">Status</th>
+                    <th class="py-2 px-3">Nominal</th>
+                    <th class="py-2 px-3">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="petugasRumahListBody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Form Buat Catatan / Laporan Mingguan -->
+          <form id="petugasWeeklyForm" class="grid sm:grid-cols-4 gap-2.5 pt-3 border-t border-slate-100 no-print">
+            <input id="pwTanggal" type="date" required class="rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+            <input id="pwKeterangan" type="text" required placeholder="Rumah / keterangan setoran RT Anda..." class="rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+            <input id="pwNominal" type="number" min="100" step="100" required placeholder="Nominal (Rp)" class="rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-xl">
+              + Masukkan ke Laporan
+            </button>
+          </form>
+
+          <!-- Tombol Cetak & Export Khusus Laporan Mingguan -->
+          <div class="flex flex-wrap gap-2 pt-2 no-print">
+            <button onclick="printWeeklyReport()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl">
+              🖨️ Cetak Laporan Mingguan
+            </button>
+            <button onclick="exportWeeklyExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl">
+              📊 Export Excel Mingguan
+            </button>
+            <button onclick="exportWeeklyJPG()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl">
+              🖼️ Export JPG Mingguan
+            </button>
           </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto print-card">
-          <table class="w-full text-sm text-left">
+        <div id="weeklyReportCard" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto print-card p-4 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b pb-2">
+            <div>
+              <h3 id="weeklyReportHeading" class="font-bold text-sm sm:text-base text-slate-900">Laporan Jimpitan Mingguan</h3>
+              <p id="weeklyReportSub" class="text-xs text-slate-500"></p>
+            </div>
+            <p id="weeklyReportSumBadge" class="text-sm font-bold text-emerald-700">Rp 0</p>
+          </div>
+
+          <table id="weeklyExportTable" class="w-full text-sm text-left border-collapse">
             <thead class="bg-slate-50 text-slate-600 border-b">
               <tr>
-                <th class="py-3 px-4">Tanggal Ambil</th>
-                <th class="py-3 px-4">Rumah</th>
-                <th class="py-3 px-4">Petugas</th>
-                <th class="py-3 px-4 text-right">Nominal</th>
+                <th class="py-2.5 px-3">Tanggal Ambil</th>
+                <th class="py-2.5 px-3">RT</th>
+                <th class="py-2.5 px-3">Rumah / Keterangan</th>
+                <th class="py-2.5 px-3">Petugas</th>
+                <th class="py-2.5 px-3 text-right">Nominal</th>
               </tr>
             </thead>
             <tbody id="petugasMingguBody" class="divide-y divide-slate-100"></tbody>
@@ -238,21 +357,26 @@
         </div>
       </section>
 
+      <!-- TAB CETAK & EXPORT REKAP (ADMIN & BENDAHARA) -->
       <section id="tab-laporan" class="tab-panel hidden space-y-4">
         <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm space-y-4">
           <div>
-            <h2 class="font-bold text-base">Cetak & Export Laporan</h2>
-            <p class="text-xs text-slate-500">Pilih jenis laporan yang ingin dicetak, diexport ke Excel (`.xls`), atau disimpan sebagai gambar (`.jpg`).</p>
+            <h2 class="font-bold text-base">Cetak & Export Rekap Mingguan, Bulanan & Gabungan RT</h2>
+            <p class="text-xs text-slate-500">Pilih rekap mingguan atau bulanan per RT (RT 37 / RT 38) maupun gabungan kedua RT.</p>
           </div>
 
           <div class="grid sm:grid-cols-2 gap-3 no-print">
             <div>
-              <label class="block text-xs font-medium mb-1">Jenis Laporan</label>
+              <label class="block text-xs font-medium mb-1">Jenis Rekap Laporan</label>
               <select id="reportType" onchange="renderReportPreview()" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white">
-                <option value="masuk">Laporan Uang Terkumpul</option>
+                <option value="mingguan_gabungan">Rekap Mingguan Gabungan (RT 37 & RT 38)</option>
+                <option value="mingguan_rt37">Rekap Mingguan RT 37</option>
+                <option value="mingguan_rt38">Rekap Mingguan RT 38</option>
+                <option value="bulanan_gabungan">Rekap Bulanan Gabungan (RT 37 & RT 38)</option>
+                <option value="bulanan_rt37">Rekap Bulanan RT 37</option>
+                <option value="bulanan_rt38">Rekap Bulanan RT 38</option>
+                <option value="rekap_petugas">Rekap Per Petugas</option>
                 <option value="keluar">Laporan Uang Keluar</option>
-                <option value="bulanan">Rekapan Kas Per Bulan</option>
-                <option value="mingguan">Laporan Uang Terkumpul Minggu Ini</option>
               </select>
             </div>
             <div class="flex flex-wrap items-end gap-2">
@@ -272,13 +396,14 @@
         </div>
       </section>
 
+      <!-- TAB AKUN -->
       <section id="tab-akun" class="tab-panel hidden space-y-4">
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
           <h2 class="font-bold text-base">Kelola Akun Pengurus</h2>
-          <p class="text-xs text-slate-500">Ubah nama pengguna atau kata sandi Admin Utama, Bendahara, dan Petugas.</p>
+          <p class="text-xs text-slate-500">Ubah nama pengguna atau kata sandi Admin Utama, Bendahara, Petugas RT 37, dan Petugas RT 38.</p>
         </div>
 
-        <div id="akunCards" class="grid md:grid-cols-3 gap-4"></div>
+        <div id="akunCards" class="grid md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
       </section>
     </main>
   </div>
@@ -289,6 +414,13 @@
       <h3 id="rumahModalTitle" class="font-bold text-lg">Tambah Rumah</h3>
       <form id="rumahForm" class="space-y-3">
         <input type="hidden" id="editRumahId" />
+        <div>
+          <label class="block text-xs font-medium mb-1">Wilayah RT</label>
+          <select id="rumahRt" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white">
+            <option value="RT 37">RT 37</option>
+            <option value="RT 38">RT 38</option>
+          </select>
+        </div>
         <div>
           <label class="block text-xs font-medium mb-1">Kode / Nomor Rumah</label>
           <input id="rumahKode" type="text" required placeholder="Contoh: R-01" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
@@ -314,6 +446,13 @@
         <div>
           <label class="block text-xs font-medium mb-1">Tanggal</label>
           <input id="trxTanggal" type="date" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium mb-1">Wilayah RT</label>
+          <select id="trxRt" required class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white">
+            <option value="RT 37">RT 37</option>
+            <option value="RT 38">RT 38</option>
+          </select>
         </div>
         <div>
           <label class="block text-xs font-medium mb-1">Keterangan / Rumah</label>
@@ -345,16 +484,22 @@
       return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
     }
 
+    function getCurrentMonth() {
+      return new Date().toISOString().slice(0, 7);
+    }
+
     const defaultState = {
       users: {
-        admin: { role: 'admin', label: 'Admin Utama', username: 'admin', password: 'admin123' },
-        bendahara: { role: 'bendahara', label: 'Bendahara', username: 'bendahara', password: 'bendahara123' },
-        petugas: { role: 'petugas', label: 'Petugas Pengambil Jimpitan', username: 'petugas', password: 'petugas123' }
+        admin: { role: 'admin', rt: null, label: 'Admin Utama', username: 'admin', password: 'admin123' },
+        bendahara: { role: 'bendahara', rt: null, label: 'Bendahara', username: 'bendahara', password: 'bendahara123' },
+        petugas_rt37: { role: 'petugas', rt: 'RT 37', label: 'Petugas RT 37', username: 'petugas37', password: 'petugas37' },
+        petugas_rt38: { role: 'petugas', rt: 'RT 38', label: 'Petugas RT 38', username: 'petugas38', password: 'petugas38' }
       },
       rumah: [
-        { id: 1, kode: 'SW-01', pemilik: 'Bapak Sugiyanto' },
-        { id: 2, kode: 'SW-02', pemilik: 'Bapak Fauzan' },
-        { id: 3, kode: 'SW-03', pemilik: 'Bapak Sarif' }
+        { id: 1, rt: 'RT 37', kode: '37-01', pemilik: 'Bapak Sugiyanto' },
+        { id: 2, rt: 'RT 37', kode: '37-02', pemilik: 'Bapak Fauzan' },
+        { id: 3, rt: 'RT 38', kode: '38-01', pemilik: 'Bapak Sarif' },
+        { id: 4, rt: 'RT 38', kode: '38-02', pemilik: 'Bapak Noval' }
       ],
       pickups: {},
       masuk: [],
@@ -364,13 +509,19 @@
     let state = loadLocalState();
     let currentUser = null;
     let activeWeek = getCurrentISOWeek();
+    let activeMonth = getCurrentMonth();
     let currentTab = 'rumah';
 
     function loadLocalState() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return structuredClone(defaultState);
-        return { ...structuredClone(defaultState), ...JSON.parse(raw) };
+        const parsed = JSON.parse(raw);
+        return {
+          ...structuredClone(defaultState),
+          ...parsed,
+          users: { ...structuredClone(defaultState.users), ...(parsed.users || {}) }
+        };
       } catch {
         return structuredClone(defaultState);
       }
@@ -410,12 +561,20 @@
       return 'Rp ' + Number(num || 0).toLocaleString('id-ID');
     }
 
+    function onLoginRoleChange() {
+      const roleKey = document.getElementById('loginRole').value;
+      const acc = state.users[roleKey];
+      if (acc) {
+        document.getElementById('loginUser').value = acc.username;
+      }
+    }
+
     document.getElementById('loginForm').addEventListener('submit', (e) => {
       e.preventDefault();
-      const role = document.getElementById('loginRole').value;
+      const roleKey = document.getElementById('loginRole').value;
       const user = document.getElementById('loginUser').value.trim();
       const pass = document.getElementById('loginPass').value;
-      const acc = state.users[role];
+      const acc = state.users[roleKey];
 
       if (acc && acc.username === user && acc.password === pass) {
         currentUser = acc;
@@ -423,6 +582,9 @@
         document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('appScreen').classList.remove('hidden');
         document.getElementById('activeWeekInput').value = activeWeek;
+        document.getElementById('activeMonthInput').value = activeMonth;
+        document.getElementById('pwTanggal').value = new Date().toISOString().slice(0, 10);
+        currentTab = acc.role === 'petugas' ? 'petugas' : 'rumah';
         initApp();
       } else {
         document.getElementById('loginError').classList.remove('hidden');
@@ -443,28 +605,42 @@
       }
     });
 
+    document.getElementById('activeMonthInput').addEventListener('change', (e) => {
+      if (e.target.value) {
+        activeMonth = e.target.value;
+        renderAll();
+      }
+    });
+
     async function initApp() {
-      document.getElementById('sessionInfo').textContent = `${currentUser.label} (${currentUser.username}) • Menyinkronkan...`;
+      const rtLabel = currentUser.rt ? ` • Wilayah: ${currentUser.rt}` : '';
+      document.getElementById('sessionInfo').textContent = `${currentUser.label}${rtLabel} • Menyinkronkan...`;
       const remote = await fetchRemoteState();
       if (remote) {
-        state = { ...structuredClone(defaultState), ...remote };
+        state = {
+          ...structuredClone(defaultState),
+          ...remote,
+          users: { ...structuredClone(defaultState.users), ...(remote.users || {}) }
+        };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       }
-      document.getElementById('sessionInfo').textContent = `${currentUser.label} (${currentUser.username}) • Tersinkron`;
+      document.getElementById('sessionInfo').textContent = `${currentUser.label}${rtLabel} • Tersinkron`;
       buildTabs();
       renderAll();
     }
 
     function buildTabs() {
-      const tabs = [
-        { id: 'rumah', label: '🏠 Rumah', roles: ['admin', 'bendahara', 'petugas'] },
-        { id: 'masuk', label: '💰 Uang Terkumpul', roles: ['admin', 'bendahara', 'petugas'] },
-        { id: 'keluar', label: '📤 Uang Keluar', roles: ['admin', 'bendahara'] },
-        { id: 'bulanan', label: '📅 Rekapan Bulanan', roles: ['admin', 'bendahara'] },
-        { id: 'petugas', label: '📝 Laporan Minggu Ini', roles: ['petugas'] },
-        { id: 'laporan', label: '🖨️ Cetak & Export', roles: ['admin', 'bendahara', 'petugas'] },
-        { id: 'akun', label: '👤 Akun', roles: ['admin'] }
-      ].filter(t => t.roles.includes(currentUser.role));
+      const tabs = currentUser.role === 'petugas'
+        ? [{ id: 'petugas', label: `📝 Laporan Mingguan (${currentUser.rt})` }]
+        : [
+            { id: 'rumah', label: '🏠 Rumah', roles: ['admin', 'bendahara'] },
+            { id: 'masuk', label: '💰 Uang Terkumpul', roles: ['admin', 'bendahara'] },
+            { id: 'keluar', label: '📤 Uang Keluar', roles: ['admin', 'bendahara'] },
+            { id: 'rekap-petugas', label: '👥 Rekap Petugas', roles: ['admin', 'bendahara'] },
+            { id: 'bulanan', label: '📅 Rekapan Bulanan', roles: ['admin', 'bendahara'] },
+            { id: 'laporan', label: '🖨️ Cetak & Export', roles: ['admin', 'bendahara'] },
+            { id: 'akun', label: '👤 Akun', roles: ['admin'] }
+          ].filter(t => t.roles.includes(currentUser.role));
 
       if (!tabs.some(t => t.id === currentTab)) {
         currentTab = tabs[0].id;
@@ -494,6 +670,9 @@
 
       if (tabId === 'laporan') renderReportPreview();
       if (tabId === 'akun') renderAkun();
+      if (tabId === 'rekap-petugas') renderRekapPetugas();
+      if (tabId === 'petugas') renderLaporanPetugas();
+      if (tabId === 'bulanan') renderBulanan();
     }
 
     function renderAll() {
@@ -501,17 +680,26 @@
       renderRumah();
       renderMasuk();
       renderKeluar();
+      renderRekapPetugas();
       renderBulanan();
       renderLaporanPetugas();
       if (currentTab === 'laporan') renderReportPreview();
     }
 
+    function getScopedRumah() {
+      if (currentUser && currentUser.role === 'petugas' && currentUser.rt) {
+        return state.rumah.filter(r => r.rt === currentUser.rt);
+      }
+      return state.rumah;
+    }
+
     function renderStats() {
-      const totalRumah = state.rumah.length;
+      const scopedRumah = getScopedRumah();
+      const totalRumah = scopedRumah.length;
       let sudah = 0;
       let uangMinggu = 0;
 
-      state.rumah.forEach(r => {
+      scopedRumah.forEach(r => {
         const key = `${activeWeek}_${r.id}`;
         if (state.pickups[key]) {
           sudah++;
@@ -520,6 +708,7 @@
       });
 
       const belum = Math.max(0, totalRumah - sudah);
+      document.getElementById('labelStatRumah').textContent = currentUser?.rt ? `Total Rumah (${currentUser.rt})` : 'Total Rumah';
       document.getElementById('statTotalRumah').textContent = totalRumah;
       document.getElementById('statSudahDiambil').textContent = sudah;
       document.getElementById('statBelumDiambil').textContent = belum;
@@ -528,22 +717,25 @@
 
     function renderRumah() {
       const query = (document.getElementById('searchRumah')?.value || '').toLowerCase();
+      const rtFilter = document.getElementById('filterRtRumah')?.value || 'all';
       const statusFilter = document.getElementById('filterStatusRumah')?.value || 'all';
-      const isAdmin = currentUser.role === 'admin';
+      const isAdmin = currentUser && currentUser.role === 'admin';
 
+      // Bendahara tidak memiliki fitur tambah/edit/hapus rumah
       document.getElementById('adminRumahActions').classList.toggle('hidden', !isAdmin);
 
       const rows = state.rumah.filter(r => {
         const key = `${activeWeek}_${r.id}`;
         const isPicked = Boolean(state.pickups[key]);
-        const matchText = r.kode.toLowerCase().includes(query) || r.pemilik.toLowerCase().includes(query);
+        const matchText = r.kode.toLowerCase().includes(query) || r.pemilik.toLowerCase().includes(query) || (r.rt || '').toLowerCase().includes(query);
+        const matchRt = rtFilter === 'all' || r.rt === rtFilter;
         const matchStatus = statusFilter === 'all' || (statusFilter === 'sudah' && isPicked) || (statusFilter === 'belum' && !isPicked);
-        return matchText && matchStatus;
+        return matchText && matchRt && matchStatus;
       });
 
       const tbody = document.getElementById('rumahTableBody');
       if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">Belum ada data rumah yang sesuai.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400">Belum ada data rumah yang sesuai.</td></tr>`;
         return;
       }
 
@@ -553,6 +745,7 @@
         return `
           <tr>
             <td class="py-3 px-4 font-mono text-xs font-semibold">${r.kode}</td>
+            <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-xs font-semibold">${r.rt || 'RT 37'}</span></td>
             <td class="py-3 px-4 font-medium">${r.pemilik}</td>
             <td class="py-3 px-4">
               ${picked
@@ -581,7 +774,7 @@
     function ambilJimpitan(rumahId) {
       const rumah = state.rumah.find(r => r.id === rumahId);
       if (!rumah) return;
-      const input = prompt(`Nominal jimpitan ${rumah.kode} (${rumah.pemilik}) untuk minggu ${activeWeek}:`, '2000');
+      const input = prompt(`Nominal jimpitan ${rumah.kode} (${rumah.rt} - ${rumah.pemilik}) untuk minggu ${activeWeek}:`, '2000');
       if (input === null) return;
       const nominal = Number(input);
       if (!nominal || nominal <= 0) {
@@ -591,13 +784,14 @@
 
       const tanggal = new Date().toISOString().slice(0, 10);
       const key = `${activeWeek}_${rumahId}`;
-      state.pickups[key] = { nominal, tanggal, petugas: currentUser.username };
+      state.pickups[key] = { nominal, tanggal, rt: rumah.rt || 'RT 37', petugas: currentUser.username };
 
       state.masuk.unshift({
         id: 'pk_' + Date.now() + '_' + rumahId,
         pickupKey: key,
         tanggal,
         week: activeWeek,
+        rt: rumah.rt || 'RT 37',
         keterangan: `Jimpitan ${rumah.kode} - ${rumah.pemilik}`,
         petugas: currentUser.username,
         nominal
@@ -617,17 +811,20 @@
     }
 
     function openRumahModal(id = null) {
+      if (!currentUser || currentUser.role !== 'admin') return;
       const modal = document.getElementById('rumahModal');
       document.getElementById('rumahForm').reset();
       if (id) {
         const r = state.rumah.find(item => item.id === id);
         document.getElementById('rumahModalTitle').textContent = 'Edit Rumah';
         document.getElementById('editRumahId').value = r.id;
+        document.getElementById('rumahRt').value = r.rt || 'RT 37';
         document.getElementById('rumahKode').value = r.kode;
         document.getElementById('rumahPemilik').value = r.pemilik;
       } else {
         document.getElementById('rumahModalTitle').textContent = 'Tambah Rumah';
         document.getElementById('editRumahId').value = '';
+        document.getElementById('rumahRt').value = 'RT 37';
       }
       modal.classList.remove('hidden');
       modal.classList.add('flex');
@@ -641,15 +838,17 @@
 
     document.getElementById('rumahForm').addEventListener('submit', (e) => {
       e.preventDefault();
+      if (!currentUser || currentUser.role !== 'admin') return;
       const id = document.getElementById('editRumahId').value;
+      const rt = document.getElementById('rumahRt').value;
       const kode = document.getElementById('rumahKode').value.trim();
       const pemilik = document.getElementById('rumahPemilik').value.trim();
 
       if (id) {
         const idx = state.rumah.findIndex(r => r.id === Number(id));
-        if (idx > -1) state.rumah[idx] = { ...state.rumah[idx], kode, pemilik };
+        if (idx > -1) state.rumah[idx] = { ...state.rumah[idx], rt, kode, pemilik };
       } else {
-        state.rumah.push({ id: Date.now(), kode, pemilik });
+        state.rumah.push({ id: Date.now(), rt, kode, pemilik });
       }
 
       saveState();
@@ -658,6 +857,7 @@
     });
 
     function hapusRumah(id) {
+      if (!currentUser || currentUser.role !== 'admin') return;
       if (!confirm('Hapus data rumah ini?')) return;
       state.rumah = state.rumah.filter(r => r.id !== id);
       saveState();
@@ -668,6 +868,7 @@
       document.getElementById('transaksiForm').reset();
       document.getElementById('trxJenis').value = jenis;
       document.getElementById('trxTanggal').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('trxRt').value = currentUser?.rt || 'RT 37';
       document.getElementById('transaksiModalTitle').textContent = jenis === 'masuk' ? 'Catat Uang Terkumpul' : 'Catat Uang Keluar';
       const modal = document.getElementById('transaksiModal');
       modal.classList.remove('hidden');
@@ -684,6 +885,7 @@
       e.preventDefault();
       const jenis = document.getElementById('trxJenis').value;
       const tanggal = document.getElementById('trxTanggal').value;
+      const rt = document.getElementById('trxRt').value;
       const keterangan = document.getElementById('trxKet').value.trim();
       const nominal = Number(document.getElementById('trxNominal').value);
 
@@ -691,6 +893,7 @@
         id: Date.now(),
         tanggal,
         week: activeWeek,
+        rt,
         keterangan,
         petugas: currentUser.username,
         nominal
@@ -707,11 +910,11 @@
     function hapusTransaksi(jenis, id) {
       if (!confirm('Hapus data transaksi ini?')) return;
       if (jenis === 'masuk') {
-        const target = state.masuk.find(m => m.id === id);
+        const target = state.masuk.find(m => String(m.id) === String(id));
         if (target?.pickupKey) delete state.pickups[target.pickupKey];
-        state.masuk = state.masuk.filter(m => m.id !== id);
+        state.masuk = state.masuk.filter(m => String(m.id) !== String(id));
       } else {
-        state.keluar = state.keluar.filter(k => k.id !== id);
+        state.keluar = state.keluar.filter(k => String(k.id) !== String(id));
       }
       saveState();
       renderAll();
@@ -723,7 +926,7 @@
 
       const tbody = document.getElementById('masukTableBody');
       if (!state.masuk.length) {
-        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400">Belum ada uang terkumpul.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">Belum ada uang terkumpul.</td></tr>`;
         return;
       }
 
@@ -731,11 +934,12 @@
         <tr>
           <td class="py-3 px-4">${m.tanggal}</td>
           <td class="py-3 px-4 font-mono text-xs">${m.week || '-'}</td>
+          <td class="py-3 px-4 text-xs font-semibold">${m.rt || '-'}</td>
           <td class="py-3 px-4">${m.keterangan}</td>
           <td class="py-3 px-4 text-xs text-slate-500">${m.petugas}</td>
           <td class="py-3 px-4 text-right font-semibold text-emerald-700">${formatRp(m.nominal)}</td>
           <td class="py-3 px-4 no-print">
-            ${currentUser.role !== 'petugas' ? `<button onclick="hapusTransaksi('masuk', '${m.id}')" class="text-red-600 hover:underline text-xs">Hapus</button>` : '-'}
+            <button onclick="hapusTransaksi('masuk', '${m.id}')" class="text-red-600 hover:underline text-xs">Hapus</button>
           </td>
         </tr>
       `).join('');
@@ -747,43 +951,94 @@
 
       const tbody = document.getElementById('keluarTableBody');
       if (!state.keluar.length) {
-        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">Belum ada pengeluaran kas.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400">Belum ada pengeluaran kas.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = state.keluar.map(k => `
         <tr>
           <td class="py-3 px-4">${k.tanggal}</td>
+          <td class="py-3 px-4 text-xs font-semibold">${k.rt || '-'}</td>
           <td class="py-3 px-4">${k.keterangan}</td>
           <td class="py-3 px-4 text-xs text-slate-500">${k.petugas}</td>
           <td class="py-3 px-4 text-right font-semibold text-red-600">${formatRp(k.nominal)}</td>
           <td class="py-3 px-4 no-print">
-            <button onclick="hapusTransaksi('keluar', ${k.id})" class="text-red-600 hover:underline text-xs">Hapus</button>
+            <button onclick="hapusTransaksi('keluar', '${k.id}')" class="text-red-600 hover:underline text-xs">Hapus</button>
           </td>
         </tr>
       `).join('');
     }
 
-    function getMonthlySummary() {
+    function getPetugasSummary(scope = 'week', rtFilter = 'all') {
+      const rows = state.masuk.filter(m => {
+        const matchWeek = scope === 'all' || m.week === activeWeek;
+        const matchRt = rtFilter === 'all' || m.rt === rtFilter;
+        return matchWeek && matchRt;
+      });
+
       const map = {};
-      state.masuk.forEach(m => {
-        const ym = (m.tanggal || '').slice(0, 7) || 'Tanpa Tanggal';
-        if (!map[ym]) map[ym] = { bulan: ym, masuk: 0, keluar: 0 };
-        map[ym].masuk += Number(m.nominal || 0);
+      rows.forEach(item => {
+        const nama = item.petugas || 'Tidak Diketahui';
+        const rt = item.rt || '-';
+        const key = `${nama}__${rt}`;
+        if (!map[key]) map[key] = { petugas: nama, rt, jumlah: 0, total: 0 };
+        map[key].jumlah += 1;
+        map[key].total += Number(item.nominal || 0);
       });
-      state.keluar.forEach(k => {
-        const ym = (k.tanggal || '').slice(0, 7) || 'Tanpa Tanggal';
-        if (!map[ym]) map[ym] = { bulan: ym, masuk: 0, keluar: 0 };
-        map[ym].keluar += Number(k.nominal || 0);
-      });
+
+      return Object.values(map).sort((a, b) => b.total - a.total);
+    }
+
+    function renderRekapPetugas() {
+      const scope = document.getElementById('rekapPetugasScope')?.value || 'week';
+      const rtFilter = document.getElementById('rekapPetugasRt')?.value || 'all';
+      const list = getPetugasSummary(scope, rtFilter);
+      const tbody = document.getElementById('rekapPetugasBody');
+
+      if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-400">Belum ada data setoran petugas pada filter ini.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(p => `
+        <tr>
+          <td class="py-3 px-4 font-semibold">${p.petugas}</td>
+          <td class="py-3 px-4 text-xs font-semibold">${p.rt}</td>
+          <td class="py-3 px-4 text-center">${p.jumlah} kali</td>
+          <td class="py-3 px-4 text-right font-bold text-emerald-700">${formatRp(p.total)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function getMonthlySummary(rtFilter = 'all') {
+      const map = {};
+      state.masuk
+        .filter(m => rtFilter === 'all' || m.rt === rtFilter)
+        .forEach(m => {
+          const ym = (m.tanggal || '').slice(0, 7) || 'Tanpa Tanggal';
+          if (!map[ym]) map[ym] = { bulan: ym, masuk: 0, keluar: 0 };
+          map[ym].masuk += Number(m.nominal || 0);
+        });
+
+      state.keluar
+        .filter(k => rtFilter === 'all' || k.rt === rtFilter)
+        .forEach(k => {
+          const ym = (k.tanggal || '').slice(0, 7) || 'Tanpa Tanggal';
+          if (!map[ym]) map[ym] = { bulan: ym, masuk: 0, keluar: 0 };
+          map[ym].keluar += Number(k.nominal || 0);
+        });
+
       return Object.values(map).sort((a, b) => b.bulan.localeCompare(a.bulan));
     }
 
     function renderBulanan() {
-      const list = getMonthlySummary();
+      const rtFilter = document.getElementById('bulananRtFilter')?.value || 'all';
+      const list = getMonthlySummary(rtFilter);
       const tbody = document.getElementById('bulananTableBody');
+      const labelWilayah = rtFilter === 'all' ? 'Gabungan RT 37 & RT 38' : rtFilter;
+
       if (!list.length) {
-        tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-400">Belum ada data rekapan bulanan.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">Belum ada data rekapan bulanan.</td></tr>`;
         return;
       }
 
@@ -792,6 +1047,7 @@
         return `
           <tr>
             <td class="py-3 px-4 font-semibold">${item.bulan}</td>
+            <td class="py-3 px-4 text-xs font-semibold">${labelWilayah}</td>
             <td class="py-3 px-4 text-right text-emerald-700 font-medium">${formatRp(item.masuk)}</td>
             <td class="py-3 px-4 text-right text-red-600 font-medium">${formatRp(item.keluar)}</td>
             <td class="py-3 px-4 text-right font-bold ${saldo >= 0 ? 'text-slate-900' : 'text-red-600'}">${formatRp(saldo)}</td>
@@ -800,64 +1056,170 @@
       }).join('');
     }
 
-    function getWeeklyPickups() {
-      return state.masuk.filter(m => m.week === activeWeek);
+    function getWeeklyPickups(rtFilter = null) {
+      return state.masuk.filter(m => {
+        const matchWeek = m.week === activeWeek;
+        const matchRt = !rtFilter || rtFilter === 'all' || m.rt === rtFilter;
+        return matchWeek && matchRt;
+      });
     }
 
+    document.getElementById('petugasWeeklyForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!currentUser || currentUser.role !== 'petugas') return;
+      const tanggal = document.getElementById('pwTanggal').value;
+      const keterangan = document.getElementById('pwKeterangan').value.trim();
+      const nominal = Number(document.getElementById('pwNominal').value);
+      if (!tanggal || !keterangan || !nominal || nominal <= 0) return;
+
+      state.masuk.unshift({
+        id: 'wk_' + Date.now(),
+        tanggal,
+        week: activeWeek,
+        rt: currentUser.rt,
+        keterangan,
+        petugas: currentUser.username,
+        nominal
+      });
+
+      saveState();
+      document.getElementById('pwKeterangan').value = '';
+      document.getElementById('pwNominal').value = '';
+      renderAll();
+    });
+
     function renderLaporanPetugas() {
-      const list = getWeeklyPickups();
+      const rt = currentUser?.rt || 'RT 37';
+      const searchRumah = (document.getElementById('searchPetugasRumah')?.value || '').toLowerCase();
+
+      document.getElementById('petugasTitle').textContent = `Laporan Mingguan Petugas (${rt})`;
+      document.getElementById('petugasSubtitle').textContent = `Khusus wilayah ${rt}: hanya rumah & laporan ${rt} yang ditampilkan.`;
+
+      // Render daftar rumah khusus RT petugas
+      const rtHouses = state.rumah.filter(r =>
+        r.rt === rt && (r.kode.toLowerCase().includes(searchRumah) || r.pemilik.toLowerCase().includes(searchRumah))
+      );
+      const rumahBody = document.getElementById('petugasRumahListBody');
+      if (!rtHouses.length) {
+        rumahBody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-400">Belum ada rumah terdaftar di ${rt}.</td></tr>`;
+      } else {
+        rumahBody.innerHTML = rtHouses.map(r => {
+          const key = `${activeWeek}_${r.id}`;
+          const picked = state.pickups[key];
+          return `
+            <tr>
+              <td class="py-2 px-3 font-mono text-xs font-semibold">${r.kode}</td>
+              <td class="py-2 px-3 font-medium">${r.pemilik}</td>
+              <td class="py-2 px-3">
+                ${picked
+                  ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Sudah Diambil</span>'
+                  : '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">Belum Diambil</span>'
+                }
+              </td>
+              <td class="py-2 px-3 font-semibold">${picked ? formatRp(picked.nominal) : '-'}</td>
+              <td class="py-2 px-3">
+                ${!picked
+                  ? `<button onclick="ambilJimpitan(${r.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-2.5 py-1 rounded-lg">Ambil</button>`
+                  : `<button onclick="batalJimpitan(${r.id})" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-lg">Batal</button>`
+                }
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Render laporan mingguan khusus RT petugas
+      const list = getWeeklyPickups(currentUser?.role === 'petugas' ? rt : null);
       const total = list.reduce((sum, item) => sum + Number(item.nominal || 0), 0);
       document.getElementById('petugasMingguTotal').textContent = formatRp(total);
+      document.getElementById('weeklyReportHeading').textContent = `Laporan Jimpitan Mingguan ${rt} (${activeWeek})`;
+      document.getElementById('weeklyReportSub').textContent = `Petugas: ${currentUser ? currentUser.username : '-'} • Jumlah catatan: ${list.length}`;
+      document.getElementById('weeklyReportSumBadge').textContent = formatRp(total);
 
       const tbody = document.getElementById('petugasMingguBody');
       if (!list.length) {
-        tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-400">Belum ada pengambilan pada minggu ${activeWeek}.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">Belum ada laporan/pengambilan ${rt} pada minggu ${activeWeek}.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = list.map(item => `
         <tr>
-          <td class="py-3 px-4">${item.tanggal}</td>
-          <td class="py-3 px-4">${item.keterangan}</td>
-          <td class="py-3 px-4 text-xs text-slate-500">${item.petugas}</td>
-          <td class="py-3 px-4 text-right font-semibold text-emerald-700">${formatRp(item.nominal)}</td>
+          <td class="py-2.5 px-3">${item.tanggal}</td>
+          <td class="py-2.5 px-3 text-xs font-semibold">${item.rt || rt}</td>
+          <td class="py-2.5 px-3">${item.keterangan}</td>
+          <td class="py-2.5 px-3 text-xs text-slate-500">${item.petugas}</td>
+          <td class="py-2.5 px-3 text-right font-semibold text-emerald-700">${formatRp(item.nominal)}</td>
         </tr>
       `).join('');
     }
 
+    function printWeeklyReport() {
+      renderLaporanPetugas();
+      window.print();
+    }
+
+    function exportWeeklyExcel() {
+      const table = document.getElementById('weeklyExportTable');
+      if (!table) return;
+      const rt = currentUser?.rt || 'RT';
+      const htmlContent = `<html><head><meta charset="UTF-8"></head><body><h3>Laporan Mingguan ${rt} (${activeWeek})</h3>${table.outerHTML}</body></html>`;
+      const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `laporan-mingguan-${rt.toLowerCase().replace(/\s+/g, '')}-${activeWeek}.xls`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportWeeklyJPG() {
+      const target = document.getElementById('weeklyReportCard');
+      const rt = currentUser?.rt || 'RT';
+      html2canvas(target, { backgroundColor: '#ffffff', scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `laporan-mingguan-${rt.toLowerCase().replace(/\s+/g, '')}-${activeWeek}.jpg`;
+        link.href = canvas.toDataURL('image/jpeg', 0.92);
+        link.click();
+      });
+    }
+
     function renderReportPreview() {
-      const type = document.getElementById('reportType')?.value || 'masuk';
+      const type = document.getElementById('reportType')?.value || 'mingguan_gabungan';
       const box = document.getElementById('reportPreviewBox');
       let html = '';
 
-      if (type === 'masuk') {
-        const total = state.masuk.reduce((s, i) => s + Number(i.nominal || 0), 0);
-        html = `<h3 class="font-bold mb-2">Laporan Uang Terkumpul (Total: ${formatRp(total)})</h3>
+      if (type === 'mingguan_gabungan' || type === 'mingguan_rt37' || type === 'mingguan_rt38') {
+        const rtFilter = type === 'mingguan_rt37' ? 'RT 37' : type === 'mingguan_rt38' ? 'RT 38' : 'all';
+        const judulRt = rtFilter === 'all' ? 'Gabungan (RT 37 & RT 38)' : rtFilter;
+        const list = getWeeklyPickups(rtFilter);
+        const total = list.reduce((s, i) => s + Number(i.nominal || 0), 0);
+        html = `<h3 class="font-bold mb-2">Rekap Mingguan ${judulRt} • Minggu ${activeWeek} (Total: ${formatRp(total)})</h3>
           <table id="exportTable" class="w-full text-xs border-collapse border border-slate-300">
-            <thead><tr class="bg-slate-100"><th class="border p-2">Tanggal</th><th class="border p-2">Minggu</th><th class="border p-2">Keterangan</th><th class="border p-2">Nominal</th></tr></thead>
-            <tbody>${state.masuk.map(m => `<tr><td class="border p-2">${m.tanggal}</td><td class="border p-2">${m.week || ''}</td><td class="border p-2">${m.keterangan}</td><td class="border p-2">${m.nominal}</td></tr>`).join('')}</tbody>
+            <thead><tr class="bg-slate-100"><th class="border p-2">Tanggal</th><th class="border p-2">RT</th><th class="border p-2">Keterangan</th><th class="border p-2">Petugas</th><th class="border p-2">Nominal</th></tr></thead>
+            <tbody>${list.map(w => `<tr><td class="border p-2">${w.tanggal}</td><td class="border p-2">${w.rt || '-'}</td><td class="border p-2">${w.keterangan}</td><td class="border p-2">${w.petugas || '-'}</td><td class="border p-2">${w.nominal}</td></tr>`).join('')}</tbody>
           </table>`;
-      } else if (type === 'keluar') {
+      } else if (type === 'bulanan_gabungan' || type === 'bulanan_rt37' || type === 'bulanan_rt38') {
+        const rtFilter = type === 'bulanan_rt37' ? 'RT 37' : type === 'bulanan_rt38' ? 'RT 38' : 'all';
+        const judulRt = rtFilter === 'all' ? 'Gabungan (RT 37 & RT 38)' : rtFilter;
+        const list = getMonthlySummary(rtFilter);
+        html = `<h3 class="font-bold mb-2">Rekap Bulanan ${judulRt}</h3>
+          <table id="exportTable" class="w-full text-xs border-collapse border border-slate-300">
+            <thead><tr class="bg-slate-100"><th class="border p-2">Bulan</th><th class="border p-2">Wilayah</th><th class="border p-2">Uang Terkumpul</th><th class="border p-2">Uang Keluar</th><th class="border p-2">Saldo</th></tr></thead>
+            <tbody>${list.map(b => `<tr><td class="border p-2">${b.bulan}</td><td class="border p-2">${judulRt}</td><td class="border p-2">${b.masuk}</td><td class="border p-2">${b.keluar}</td><td class="border p-2">${b.masuk - b.keluar}</td></tr>`).join('')}</tbody>
+          </table>`;
+      } else if (type === 'rekap_petugas') {
+        const list = getPetugasSummary('all', 'all');
+        html = `<h3 class="font-bold mb-2">Rekap Per Petugas (Semua Waktu)</h3>
+          <table id="exportTable" class="w-full text-xs border-collapse border border-slate-300">
+            <thead><tr class="bg-slate-100"><th class="border p-2">Petugas</th><th class="border p-2">RT</th><th class="border p-2">Jumlah Setoran</th><th class="border p-2">Total Terkumpul</th></tr></thead>
+            <tbody>${list.map(p => `<tr><td class="border p-2">${p.petugas}</td><td class="border p-2">${p.rt}</td><td class="border p-2">${p.jumlah}</td><td class="border p-2">${p.total}</td></tr>`).join('')}</tbody>
+          </table>`;
+      } else {
         const total = state.keluar.reduce((s, i) => s + Number(i.nominal || 0), 0);
         html = `<h3 class="font-bold mb-2">Laporan Uang Keluar (Total: ${formatRp(total)})</h3>
           <table id="exportTable" class="w-full text-xs border-collapse border border-slate-300">
-            <thead><tr class="bg-slate-100"><th class="border p-2">Tanggal</th><th class="border p-2">Keperluan</th><th class="border p-2">Nominal</th></tr></thead>
-            <tbody>${state.keluar.map(k => `<tr><td class="border p-2">${k.tanggal}</td><td class="border p-2">${k.keterangan}</td><td class="border p-2">${k.nominal}</td></tr>`).join('')}</tbody>
-          </table>`;
-      } else if (type === 'bulanan') {
-        const list = getMonthlySummary();
-        html = `<h3 class="font-bold mb-2">Rekapan Kas Per Bulan</h3>
-          <table id="exportTable" class="w-full text-xs border-collapse border border-slate-300">
-            <thead><tr class="bg-slate-100"><th class="border p-2">Bulan</th><th class="border p-2">Uang Terkumpul</th><th class="border p-2">Uang Keluar</th><th class="border p-2">Saldo</th></tr></thead>
-            <tbody>${list.map(b => `<tr><td class="border p-2">${b.bulan}</td><td class="border p-2">${b.masuk}</td><td class="border p-2">${b.keluar}</td><td class="border p-2">${b.masuk - b.keluar}</td></tr>`).join('')}</tbody>
-          </table>`;
-      } else {
-        const list = getWeeklyPickups();
-        const total = list.reduce((s, i) => s + Number(i.nominal || 0), 0);
-        html = `<h3 class="font-bold mb-2">Laporan Uang Terkumpul Minggu ${activeWeek} (Total: ${formatRp(total)})</h3>
-          <table id="exportTable" class="w-full text-xs border-collapse border border-slate-300">
-            <thead><tr class="bg-slate-100"><th class="border p-2">Tanggal</th><th class="border p-2">Rumah</th><th class="border p-2">Petugas</th><th class="border p-2">Nominal</th></tr></thead>
-            <tbody>${list.map(w => `<tr><td class="border p-2">${w.tanggal}</td><td class="border p-2">${w.keterangan}</td><td class="border p-2">${w.petugas}</td><td class="border p-2">${w.nominal}</td></tr>`).join('')}</tbody>
+            <thead><tr class="bg-slate-100"><th class="border p-2">Tanggal</th><th class="border p-2">RT</th><th class="border p-2">Keperluan</th><th class="border p-2">Nominal</th></tr></thead>
+            <tbody>${state.keluar.map(k => `<tr><td class="border p-2">${k.tanggal}</td><td class="border p-2">${k.rt || '-'}</td><td class="border p-2">${k.keterangan}</td><td class="border p-2">${k.nominal}</td></tr>`).join('')}</tbody>
           </table>`;
       }
 
@@ -872,7 +1234,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `laporan-jimpitan-${document.getElementById('reportType').value}.xls`;
+      a.download = `rekap-jimpitan-${document.getElementById('reportType').value}.xls`;
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -881,7 +1243,7 @@
       const target = document.getElementById('reportPreviewBox');
       html2canvas(target, { backgroundColor: '#ffffff', scale: 2 }).then(canvas => {
         const link = document.createElement('a');
-        link.download = `laporan-jimpitan-${document.getElementById('reportType').value}.jpg`;
+        link.download = `rekap-jimpitan-${document.getElementById('reportType').value}.jpg`;
         link.href = canvas.toDataURL('image/jpeg', 0.92);
         link.click();
       });
@@ -889,27 +1251,29 @@
 
     function renderAkun() {
       const container = document.getElementById('akunCards');
-      container.innerHTML = Object.values(state.users).map(u => `
+      container.innerHTML = Object.entries(state.users).map(([key, u]) => `
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm space-y-2">
           <h3 class="font-bold text-sm">${u.label}</h3>
           <label class="block text-xs text-slate-500">Username</label>
-          <input id="u_${u.role}" value="${u.username}" class="w-full rounded-lg border px-2.5 py-1.5 text-sm" />
+          <input id="u_${key}" value="${u.username}" class="w-full rounded-lg border px-2.5 py-1.5 text-sm" />
           <label class="block text-xs text-slate-500">Password</label>
-          <input id="p_${u.role}" value="${u.password}" class="w-full rounded-lg border px-2.5 py-1.5 text-sm" />
-          <button onclick="simpanAkun('${u.role}')" class="w-full mt-2 bg-emerald-600 text-white text-xs font-semibold py-2 rounded-lg">Simpan Akun</button>
+          <input id="p_${key}" value="${u.password}" class="w-full rounded-lg border px-2.5 py-1.5 text-sm" />
+          <button onclick="simpanAkun('${key}')" class="w-full mt-2 bg-emerald-600 text-white text-xs font-semibold py-2 rounded-lg">Simpan Akun</button>
         </div>
       `).join('');
     }
 
-    function simpanAkun(role) {
-      const u = document.getElementById('u_' + role).value.trim();
-      const p = document.getElementById('p_' + role).value;
+    function simpanAkun(roleKey) {
+      const u = document.getElementById('u_' + roleKey).value.trim();
+      const p = document.getElementById('p_' + roleKey).value;
       if (!u || !p) return alert('Username dan password tidak boleh kosong.');
-      state.users[role].username = u;
-      state.users[role].password = p;
+      state.users[roleKey].username = u;
+      state.users[roleKey].password = p;
       saveState();
       alert('Akun berhasil diperbarui.');
     }
+
+    onLoginRoleChange();
   </script>
 </body>
 </html>
