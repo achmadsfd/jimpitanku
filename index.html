@@ -332,7 +332,6 @@
   </div>
 
   <script>
-    // https://script.google.com/macros/s/AKfycbzOWRfhfq52jdvuIu6hNYz2lo0khEIixVD4vMhh0X1nMoEZZnp_jRdQNoxrXRFCjEIiww/exec:
     const API_URL = 'https://script.google.com/macros/s/AKfycbzOWRfhfq52jdvuIu6hNYz2lo0khEIixVD4vMhh0X1nMoEZZnp_jRdQNoxrXRFCjEIiww/exec';
     const STORAGE_KEY = 'jimpitan_sewan_v1';
 
@@ -378,7 +377,7 @@
     }
 
     async function fetchRemoteState() {
-      if (!API_URL || API_URL === 'https://script.google.com/macros/s/AKfycbzOWRfhfq52jdvuIu6hNYz2lo0khEIixVD4vMhh0X1nMoEZZnp_jRdQNoxrXRFCjEIiww/exec') return null;
+      if (!API_URL) return null;
       try {
         const res = await fetch(`${API_URL}?key=${encodeURIComponent(STORAGE_KEY)}`);
         const json = await res.json();
@@ -390,7 +389,7 @@
     }
 
     async function pushRemoteState() {
-      if (!API_URL || API_URL === 'https://script.google.com/macros/s/AKfycbzOWRfhfq52jdvuIu6hNYz2lo0khEIixVD4vMhh0X1nMoEZZnp_jRdQNoxrXRFCjEIiww/exec') return;
+      if (!API_URL) return;
       try {
         await fetch(API_URL, {
           method: 'POST',
