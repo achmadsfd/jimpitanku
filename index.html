@@ -63,7 +63,6 @@
 
   <!-- APLIKASI UTAMA -->
   <div id="appScreen" class="hidden min-h-screen flex flex-col">
-    <!-- Topbar -->
     <header class="bg-emerald-700 text-white sticky top-0 z-20 shadow no-print">
       <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
         <div>
@@ -80,15 +79,10 @@
           </button>
         </div>
       </div>
-
-      <!-- Navigasi Tab -->
       <nav id="navTabs" class="max-w-6xl mx-auto px-2 pb-2 flex gap-1.5 overflow-x-auto text-xs sm:text-sm"></nav>
     </header>
 
-    <!-- Konten Utama -->
     <main id="exportArea" class="max-w-6xl w-full mx-auto px-4 py-5 flex-1 space-y-6">
-
-      <!-- RINGKASAN STATISTIK -->
       <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm print-card">
           <p class="text-xs text-slate-500">Total Rumah</p>
@@ -108,7 +102,6 @@
         </div>
       </section>
 
-      <!-- TAB 1: RUMAH & AMBIL JIMPUTAN -->
       <section id="tab-rumah" class="tab-panel space-y-4">
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3 no-print">
           <div class="flex flex-wrap items-center gap-2 flex-1">
@@ -142,7 +135,6 @@
         </div>
       </section>
 
-      <!-- TAB 2: DATA UANG TERKUMPUL -->
       <section id="tab-masuk" class="tab-panel hidden space-y-4">
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -171,7 +163,6 @@
         </div>
       </section>
 
-      <!-- TAB 3: DATA UANG KELUAR -->
       <section id="tab-keluar" class="tab-panel hidden space-y-4">
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -199,7 +190,6 @@
         </div>
       </section>
 
-      <!-- TAB 4: REKAPAN PER BULAN (ADMIN UTAMA & BENDAHARA) -->
       <section id="tab-bulanan" class="tab-panel hidden space-y-4">
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
           <h2 class="font-bold text-base">Rekapan Kas Per Bulan</h2>
@@ -221,7 +211,6 @@
         </div>
       </section>
 
-      <!-- TAB 5: LAPORAN MINGGUAN PETUGAS -->
       <section id="tab-petugas" class="tab-panel hidden space-y-4">
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -249,7 +238,6 @@
         </div>
       </section>
 
-      <!-- TAB 6: CETAK & EXPORT LAPORAN -->
       <section id="tab-laporan" class="tab-panel hidden space-y-4">
         <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm space-y-4">
           <div>
@@ -284,7 +272,6 @@
         </div>
       </section>
 
-      <!-- TAB 7: KELOLA AKUN (KHUSUS ADMIN UTAMA) -->
       <section id="tab-akun" class="tab-panel hidden space-y-4">
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
           <h2 class="font-bold text-base">Kelola Akun Pengurus</h2>
@@ -293,7 +280,6 @@
 
         <div id="akunCards" class="grid md:grid-cols-3 gap-4"></div>
       </section>
-
     </main>
   </div>
 
@@ -346,6 +332,8 @@
   </div>
 
   <script>
+    // https://script.google.com/macros/s/AKfycbzOWRfhfq52jdvuIu6hNYz2lo0khEIixVD4vMhh0X1nMoEZZnp_jRdQNoxrXRFCjEIiww/exec:
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzOWRfhfq52jdvuIu6hNYz2lo0khEIixVD4vMhh0X1nMoEZZnp_jRdQNoxrXRFCjEIiww/exec';
     const STORAGE_KEY = 'jimpitan_sewan_v1';
 
     function getCurrentISOWeek() {
@@ -369,18 +357,17 @@
         { id: 2, kode: 'SW-02', pemilik: 'Bapak Fauzan' },
         { id: 3, kode: 'SW-03', pemilik: 'Bapak Sarif' }
       ],
-      // Key format: "2026-W47_1": { nominal: 2000, tanggal: "2026-11-19", petugas: "petugas" }
       pickups: {},
       masuk: [],
       keluar: []
     };
 
-    let state = loadState();
+    let state = loadLocalState();
     let currentUser = null;
     let activeWeek = getCurrentISOWeek();
     let currentTab = 'rumah';
 
-    function loadState() {
+    function loadLocalState() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return structuredClone(defaultState);
@@ -390,15 +377,40 @@
       }
     }
 
+    async function fetchRemoteState() {
+      if (!API_URL || API_URL === 'https://script.google.com/macros/s/AKfycbzOWRfhfq52jdvuIu6hNYz2lo0khEIixVD4vMhh0X1nMoEZZnp_jRdQNoxrXRFCjEIiww/exec') return null;
+      try {
+        const res = await fetch(`${API_URL}?key=${encodeURIComponent(STORAGE_KEY)}`);
+        const json = await res.json();
+        return json && json.ok ? json.data : null;
+      } catch (err) {
+        console.warn('Gagal ambil dari cloud:', err);
+        return null;
+      }
+    }
+
+    async function pushRemoteState() {
+      if (!API_URL || API_URL === 'https://script.google.com/macros/s/AKfycbzOWRfhfq52jdvuIu6hNYz2lo0khEIixVD4vMhh0X1nMoEZZnp_jRdQNoxrXRFCjEIiww/exec') return;
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ key: STORAGE_KEY, data: state })
+        });
+      } catch (err) {
+        console.warn('Gagal simpan ke cloud:', err);
+      }
+    }
+
     function saveState() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      pushRemoteState();
     }
 
     function formatRp(num) {
       return 'Rp ' + Number(num || 0).toLocaleString('id-ID');
     }
 
-    // LOGIN & LOGOUT
     document.getElementById('loginForm').addEventListener('submit', (e) => {
       e.preventDefault();
       const role = document.getElementById('loginRole').value;
@@ -432,8 +444,14 @@
       }
     });
 
-    function initApp() {
-      document.getElementById('sessionInfo').textContent = `${currentUser.label} (${currentUser.username})`;
+    async function initApp() {
+      document.getElementById('sessionInfo').textContent = `${currentUser.label} (${currentUser.username}) • Menyinkronkan...`;
+      const remote = await fetchRemoteState();
+      if (remote) {
+        state = { ...structuredClone(defaultState), ...remote };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
+      document.getElementById('sessionInfo').textContent = `${currentUser.label} (${currentUser.username}) • Tersinkron`;
       buildTabs();
       renderAll();
     }
@@ -509,7 +527,6 @@
       document.getElementById('statUangMinggu').textContent = formatRp(uangMinggu);
     }
 
-    // RUMAH & PENGAMBILAN MINGGUAN
     function renderRumah() {
       const query = (document.getElementById('searchRumah')?.value || '').toLowerCase();
       const statusFilter = document.getElementById('filterStatusRumah')?.value || 'all';
@@ -648,7 +665,6 @@
       renderAll();
     }
 
-    // TRANSAKSI UANG MASUK & KELUAR
     function openTransaksiModal(jenis) {
       document.getElementById('transaksiForm').reset();
       document.getElementById('trxJenis').value = jenis;
@@ -749,7 +765,6 @@
       `).join('');
     }
 
-    // REKAPAN BULANAN
     function getMonthlySummary() {
       const map = {};
       state.masuk.forEach(m => {
@@ -786,7 +801,6 @@
       }).join('');
     }
 
-    // LAPORAN MINGGUAN PETUGAS
     function getWeeklyPickups() {
       return state.masuk.filter(m => m.week === activeWeek);
     }
@@ -812,7 +826,6 @@
       `).join('');
     }
 
-    // CETAK & EXPORT (PRINT, EXCEL, JPG)
     function renderReportPreview() {
       const type = document.getElementById('reportType')?.value || 'masuk';
       const box = document.getElementById('reportPreviewBox');
@@ -875,7 +888,6 @@
       });
     }
 
-    // KELOLA AKUN
     function renderAkun() {
       const container = document.getElementById('akunCards');
       container.innerHTML = Object.values(state.users).map(u => `
