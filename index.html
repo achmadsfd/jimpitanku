@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Jimpitan Sewan — Sistem Kas Mingguan & Bulanan + Scan QR</title>
+  <title>JIMPITANKU — Sistem Administrasi Jimpitan Dusun Sewan</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -22,25 +22,16 @@
   <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-md bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
       <div class="text-center mb-6">
-        <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-600 text-white font-bold text-xl mb-2">JS</div>
-        <h1 class="text-2xl font-bold text-slate-900">Jimpitan Sewan</h1>
-        <p class="text-sm text-slate-500">Pendataan Mingguan & Rekapan Bulanan (RT 37 & RT 38)</p>
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-600 text-white font-bold text-xl mb-2">JK</div>
+        <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">JIMPITANKU</h1>
+        <p class="text-sm font-semibold text-emerald-700">Rukun Agawe Santoso Sewan</p>
+        <p class="text-xs text-slate-500 mt-0.5">Sistem Administrasi Jimpitan Dusun Sewan</p>
       </div>
 
       <form id="loginForm" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium mb-1">Peran Akun</label>
-          <select id="loginRole" onchange="onLoginRoleChange()" class="w-full rounded-xl border border-slate-300 px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-            <option value="admin">Admin Utama</option>
-            <option value="bendahara">Bendahara</option>
-            <option value="petugas_rt37">Petugas RT 37</option>
-            <option value="petugas_rt38">Petugas RT 38</option>
-          </select>
-        </div>
-
-        <div>
           <label class="block text-sm font-medium mb-1">Nama Pengguna</label>
-          <input id="loginUser" type="text" required class="w-full rounded-xl border border-slate-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Masukkan nama akun" />
+          <input id="loginUser" type="text" required class="w-full rounded-xl border border-slate-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Masukkan nama pengguna" />
         </div>
 
         <div>
@@ -48,7 +39,7 @@
           <input id="loginPass" type="password" required class="w-full rounded-xl border border-slate-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="••••••••" />
         </div>
 
-        <p id="loginError" class="text-sm text-red-600 hidden">Akun atau kata sandi tidak sesuai.</p>
+        <p id="loginError" class="text-sm text-red-600 hidden">Nama pengguna atau kata sandi tidak sesuai.</p>
 
         <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl transition">
           Masuk Aplikasi
@@ -70,11 +61,13 @@
     <header class="bg-emerald-700 text-white sticky top-0 z-20 shadow no-print">
       <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 class="font-bold text-lg leading-tight">Jimpitan Sewan</h1>
-          <p id="sessionInfo" class="text-xs text-emerald-100"></p>
+          <h1 class="font-extrabold text-lg leading-tight tracking-tight">JIMPITANKU</h1>
+          <p class="text-xs font-medium text-emerald-100 leading-snug">Rukun Agawe Santoso Sewan</p>
+          <p class="text-[11px] text-emerald-200 leading-tight">Sistem Administrasi Jimpitan Dusun Sewan</p>
+          <p id="sessionInfo" class="text-[11px] text-amber-200 mt-0.5"></p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <button onclick="openScannerModal(null)" class="bg-amber-400 hover:bg-amber-300 text-slate-900 text-xs font-bold px-3 py-2 rounded-lg shadow-sm flex items-center gap-1">
+          <button id="headerScanBtn" onclick="openScannerModal(null)" class="bg-amber-400 hover:bg-amber-300 text-slate-900 text-xs font-bold px-3 py-2 rounded-lg shadow-sm flex items-center gap-1">
             📷 Scan QR Rumah
           </button>
           <div class="bg-emerald-800/80 rounded-lg px-2.5 py-1 text-xs">
@@ -118,7 +111,7 @@
       <section id="tab-rumah" class="tab-panel space-y-4">
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3 no-print">
           <div class="flex flex-wrap items-center gap-2 flex-1">
-            <input id="searchRumah" oninput="renderRumah()" type="text" placeholder="Cari kode rumah / nama pemilik..." class="rounded-xl border border-slate-300 px-3 py-2 text-sm w-full sm:w-56" />
+            <input id="searchRumah" oninput="renderRumah()" type="text" placeholder="Cari nama pemilik / RT..." class="rounded-xl border border-slate-300 px-3 py-2 text-sm w-full sm:w-56" />
             <select id="filterRtRumah" onchange="renderRumah()" class="rounded-xl border border-slate-300 px-3 py-2 text-sm bg-white">
               <option value="all">Semua RT (37 & 38)</option>
               <option value="RT 37">RT 37</option>
@@ -141,7 +134,7 @@
           <table class="w-full text-sm text-left">
             <thead class="bg-slate-50 text-slate-600 border-b">
               <tr>
-                <th class="py-3 px-4">No / Kode</th>
+                <th class="py-3 px-4">No</th>
                 <th class="py-3 px-4">RT</th>
                 <th class="py-3 px-4">Nama Pemilik Rumah</th>
                 <th class="py-3 px-4">Status Minggu Ini</th>
@@ -154,12 +147,12 @@
         </div>
       </section>
 
-      <!-- TAB QR SEMUA RUMAH (GAMBAR QR ASLI TERKUNCI KHUSUS APLIKASI & SIAP UNDUH) -->
+      <!-- TAB QR SEMUA RUMAH -->
       <section id="tab-qr-cards" class="tab-panel hidden space-y-4">
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3 no-print">
           <div>
             <h2 class="font-bold text-base">Gambar QR Resmi Semua Rumah (Siap Unduh)</h2>
-            <p class="text-xs text-slate-500">QR asli bertanda tangan khusus Jimpitan Sewan untuk semua rumah (RT 37 & RT 38). Unduh gambar lalu gunakan untuk scan sebelum konfirmasi bayar.</p>
+            <p class="text-xs text-slate-500">QR asli bertanda tangan khusus JIMPITANKU untuk semua rumah (RT 37 & RT 38).</p>
           </div>
           <div class="flex flex-wrap gap-2">
             <button onclick="downloadAllHousesQrImage('png')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl">
@@ -176,12 +169,15 @@
 
         <div class="flex justify-center">
           <div id="allHousesQrCard" class="bg-white rounded-2xl border-2 border-emerald-700 p-6 max-w-md w-full flex flex-col items-center text-center space-y-3 print-card shadow-sm">
-            <span class="text-xs font-bold tracking-wider uppercase text-emerald-700">JIMPITAN SEWAN • QR RESMI SEMUA RUMAH</span>
-            <h3 class="text-lg font-extrabold text-slate-900">QR JIMPITAN SEMUA RUMAH</h3>
-            <p class="text-xs font-semibold text-slate-600">Wilayah RT 37 & RT 38</p>
+            <div class="w-full border-b-2 border-slate-800 pb-2.5">
+              <p class="text-base font-extrabold text-slate-900 tracking-wide">JIMPITANKU</p>
+              <p class="text-xs font-bold text-emerald-700">Rukun Agawe Santoso Sewan</p>
+              <p class="text-[11px] text-slate-600">Sistem Administrasi Jimpitan Dusun Sewan</p>
+            </div>
+            <h3 class="text-base font-extrabold text-slate-900">QR JIMPITAN SEMUA RUMAH (RT 37 & RT 38)</h3>
             <div id="allHousesQrCanvas" class="p-3 bg-white rounded-xl border border-slate-200"></div>
             <p id="allHousesQrSummary" class="text-xs font-semibold text-emerald-800"></p>
-            <p class="text-[11px] text-slate-400">Terkunci khusus untuk pemindaian di Aplikasi Jimpitan Sewan</p>
+            <p class="text-[11px] text-slate-400">Terkunci khusus untuk pemindaian di Aplikasi JIMPITANKU</p>
           </div>
         </div>
       </section>
@@ -205,7 +201,7 @@
                 <th class="py-3 px-4">Tanggal</th>
                 <th class="py-3 px-4">Minggu</th>
                 <th class="py-3 px-4">RT</th>
-                <th class="py-3 px-4">Rumah / Keterangan</th>
+                <th class="py-3 px-4">Catatan</th>
                 <th class="py-3 px-4">Petugas</th>
                 <th class="py-3 px-4 text-right">Nominal</th>
                 <th class="py-3 px-4 no-print">Hapus</th>
@@ -333,13 +329,13 @@
           <div class="border-t border-slate-100 pt-3 space-y-2 no-print">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <h3 class="font-semibold text-sm text-slate-800">Daftar Rumah Wilayah Anda (Klik Ambil -> Scan QR)</h3>
-              <input id="searchPetugasRumah" oninput="renderLaporanPetugas()" type="text" placeholder="Cari rumah di RT Anda..." class="rounded-xl border border-slate-300 px-3 py-1.5 text-xs sm:text-sm w-full sm:w-60" />
+              <input id="searchPetugasRumah" oninput="renderLaporanPetugas()" type="text" placeholder="Cari pemilik rumah di RT Anda..." class="rounded-xl border border-slate-300 px-3 py-1.5 text-xs sm:text-sm w-full sm:w-60" />
             </div>
             <div class="overflow-x-auto border rounded-xl">
               <table class="w-full text-xs sm:text-sm text-left">
                 <thead class="bg-slate-50 text-slate-600 border-b">
                   <tr>
-                    <th class="py-2 px-3">Kode</th>
+                    <th class="py-2 px-3">No</th>
                     <th class="py-2 px-3">Nama Pemilik Rumah</th>
                     <th class="py-2 px-3">Status</th>
                     <th class="py-2 px-3">Nominal</th>
@@ -354,7 +350,7 @@
           <!-- Form Buat Catatan / Laporan Mingguan -->
           <form id="petugasWeeklyForm" class="grid sm:grid-cols-4 gap-2.5 pt-3 border-t border-slate-100 no-print">
             <input id="pwTanggal" type="date" required class="rounded-xl border border-slate-300 px-3 py-2 text-sm" />
-            <input id="pwKeterangan" type="text" required placeholder="Rumah / keterangan setoran RT Anda..." class="rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+            <input id="pwKeterangan" type="text" required placeholder="Catatan setoran RT Anda..." class="rounded-xl border border-slate-300 px-3 py-2 text-sm" />
             <input id="pwNominal" type="number" min="100" step="100" required placeholder="Nominal (Rp)" class="rounded-xl border border-slate-300 px-3 py-2 text-sm" />
             <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-xl">
               + Masukkan ke Laporan
@@ -376,6 +372,12 @@
         </div>
 
         <div id="weeklyReportCard" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto print-card p-4 space-y-3">
+          <div class="text-center border-b-2 border-slate-800 pb-2.5">
+            <p class="text-base font-extrabold text-slate-900 tracking-wide">JIMPITANKU</p>
+            <p class="text-xs font-bold text-emerald-700">Rukun Agawe Santoso Sewan</p>
+            <p class="text-[11px] text-slate-600">Sistem Administrasi Jimpitan Dusun Sewan</p>
+          </div>
+
           <div class="flex flex-wrap items-center justify-between gap-2 border-b pb-2">
             <div>
               <h3 id="weeklyReportHeading" class="font-bold text-sm sm:text-base text-slate-900">Laporan Jimpitan Mingguan</h3>
@@ -389,7 +391,7 @@
               <tr>
                 <th class="py-2.5 px-3">Tanggal Ambil</th>
                 <th class="py-2.5 px-3">RT</th>
-                <th class="py-2.5 px-3">Rumah / Keterangan</th>
+                <th class="py-2.5 px-3">Catatan</th>
                 <th class="py-2.5 px-3">Petugas</th>
                 <th class="py-2.5 px-3 text-right">Nominal</th>
               </tr>
@@ -450,13 +452,13 @@
     </main>
   </div>
 
-  <!-- MODAL SCAN QR KHUSUS JIMPITAN SEWAN -->
+  <!-- MODAL SCAN QR KHUSUS JIMPITANKU -->
   <div id="scannerModal" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-40">
     <div class="bg-white rounded-2xl w-full max-w-md p-5 space-y-4">
       <div class="flex items-center justify-between gap-2">
         <div>
           <h3 class="font-bold text-lg text-slate-900">Scan QR Semua Rumah</h3>
-          <p id="scannerTargetInfo" class="text-xs text-slate-500">Wajib scan QR resmi Jimpitan Sewan sebelum konfirmasi bayar</p>
+          <p id="scannerTargetInfo" class="text-xs text-slate-500">Wajib scan QR resmi JIMPITANKU sebelum konfirmasi bayar</p>
         </div>
         <div class="flex items-center gap-1.5">
           <button onclick="switchCameraDevice()" class="px-2.5 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-semibold">🔄 Kamera</button>
@@ -469,7 +471,7 @@
       </div>
 
       <div id="scanStatusMsg" class="text-xs p-2.5 rounded-xl bg-slate-100 text-slate-700">
-        Arahkan kamera ke QR Resmi Semua Rumah Jimpitan Sewan...
+        Arahkan kamera ke QR Resmi Semua Rumah JIMPITANKU...
       </div>
 
       <div class="pt-2 border-t border-slate-100 space-y-2">
@@ -510,7 +512,7 @@
     </div>
   </div>
 
-  <!-- MODAL TAMBAH/EDIT RUMAH -->
+  <!-- MODAL TAMBAH/EDIT RUMAH (TANPA KODE RUMAH) -->
   <div id="rumahModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-30">
     <div class="bg-white rounded-2xl w-full max-w-md p-5 space-y-4">
       <h3 id="rumahModalTitle" class="font-bold text-lg">Tambah Rumah</h3>
@@ -524,12 +526,8 @@
           </select>
         </div>
         <div>
-          <label class="block text-xs font-medium mb-1">Kode / Nomor Rumah</label>
-          <input id="rumahKode" type="text" required placeholder="Contoh: 37-01" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
-        </div>
-        <div>
           <label class="block text-xs font-medium mb-1">Nama Pemilik Rumah</label>
-          <input id="rumahPemilik" type="text" required placeholder="Contoh: Pak Sugiyanto" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+          <input id="rumahPemilik" type="text" required placeholder="Contoh: Bapak Sugiyanto" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
         </div>
         <div class="flex justify-end gap-2 pt-2">
           <button type="button" onclick="closeRumahModal()" class="px-4 py-2 rounded-xl border text-sm">Batal</button>
@@ -556,9 +554,9 @@
             <option value="RT 38">RT 38</option>
           </select>
         </div>
-        <div>
-          <label class="block text-xs font-medium mb-1">Keterangan / Rumah</label>
-          <input id="trxKet" type="text" required placeholder="Contoh: Jimpitan 37-01 / Beli buku kas" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+        <div id="trxKetWrapper">
+          <label class="block text-xs font-medium mb-1">Keperluan / Keterangan</label>
+          <input id="trxKet" type="text" placeholder="Contoh: Beli buku kas" class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm" />
         </div>
         <div>
           <label class="block text-xs font-medium mb-1">Nominal (Rp)</label>
@@ -574,9 +572,18 @@
 
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbzOWRfhfq52jdvuIu6hNYz2lo0khEIixVD4vMhh0X1nMoEZZnp_jRdQNoxrXRFCjEIiww/exec';
-    const STORAGE_KEY = 'jimpitan_sewan_v1';
-    const QR_APP_MAGIC = 'JIMPITAN_SEWAN_ALL_HOUSES_V1';
+    const STORAGE_KEY = 'jimpitanku_sewan_v2';
+    const SESSION_KEY = 'jimpitanku_session_v2';
+    const QR_APP_MAGIC = 'JIMPITANKU_SEWAN_ALL_HOUSES_V1';
     const QR_APP_SECRET = 'SEWAN_ALL_HOUSES_LOCK_2026';
+
+    const KOP_HTML = `
+      <div style="text-align:center;border-bottom:2px solid #0f172a;padding-bottom:10px;margin-bottom:12px;">
+        <div style="font-size:16px;font-weight:800;color:#0f172a;letter-spacing:0.5px;">JIMPITANKU</div>
+        <div style="font-size:12px;font-weight:700;color:#047857;">Rukun Agawe Santoso Sewan</div>
+        <div style="font-size:11px;color:#475569;">Sistem Administrasi Jimpitan Dusun Sewan</div>
+      </div>
+    `;
 
     function computeAllHousesQrSignature() {
       const raw = `${QR_APP_MAGIC}|ALL_HOUSES|${QR_APP_SECRET}`;
@@ -600,14 +607,14 @@
       try {
         const parsed = JSON.parse(decodedText);
         if (!parsed || parsed.app !== QR_APP_MAGIC || parsed.scope !== 'ALL_HOUSES' || !parsed.sig) {
-          return { valid: false, reason: 'QR tidak dikenali! Bukan QR resmi semua rumah Jimpitan Sewan.' };
+          return { valid: false, reason: 'QR tidak dikenali! Bukan QR resmi semua rumah JIMPITANKU.' };
         }
         if (parsed.sig !== computeAllHousesQrSignature()) {
           return { valid: false, reason: 'Tanda tangan keamanan QR tidak cocok (QR tidak sah).' };
         }
         return { valid: true };
       } catch {
-        return { valid: false, reason: 'Format QR ditolak! Hanya QR resmi Jimpitan Sewan yang dapat dipindai.' };
+        return { valid: false, reason: 'Format QR ditolak! Hanya QR resmi JIMPITANKU yang dapat dipindai.' };
       }
     }
 
@@ -627,16 +634,16 @@
 
     const defaultState = {
       users: {
-        admin: { role: 'admin', rt: null, label: 'Admin Utama', username: 'admin', password: 'admin123' },
-        bendahara: { role: 'bendahara', rt: null, label: 'Bendahara', username: 'bendahara', password: 'bendahara123' },
-        petugas_rt37: { role: 'petugas', rt: 'RT 37', label: 'Petugas RT 37', username: 'petugas37', password: 'petugas37' },
-        petugas_rt38: { role: 'petugas', rt: 'RT 38', label: 'Petugas RT 38', username: 'petugas38', password: 'petugas38' }
+        admin: { roleKey: 'admin', role: 'admin', rt: null, label: 'Admin Utama', username: 'admin', password: 'admin123' },
+        bendahara: { roleKey: 'bendahara', role: 'bendahara', rt: null, label: 'Bendahara', username: 'bendahara', password: 'bendahara123' },
+        petugas_rt37: { roleKey: 'petugas_rt37', role: 'petugas', rt: 'RT 37', label: 'Petugas RT 37', username: 'petugas37', password: 'petugas37' },
+        petugas_rt38: { roleKey: 'petugas_rt38', role: 'petugas', rt: 'RT 38', label: 'Petugas RT 38', username: 'petugas38', password: 'petugas38' }
       },
       rumah: [
-        { id: 1, rt: 'RT 37', kode: '37-01', pemilik: 'Bapak Sugiyanto' },
-        { id: 2, rt: 'RT 37', kode: '37-02', pemilik: 'Bapak Fauzan' },
-        { id: 3, rt: 'RT 38', kode: '38-01', pemilik: 'Bapak Sarif' },
-        { id: 4, rt: 'RT 38', kode: '38-02', pemilik: 'Bapak Noval' }
+        { id: 1, rt: 'RT 37', pemilik: 'Bapak Sugiyanto' },
+        { id: 2, rt: 'RT 37', pemilik: 'Bapak Fauzan' },
+        { id: 3, rt: 'RT 38', pemilik: 'Bapak Sarif' },
+        { id: 4, rt: 'RT 38', pemilik: 'Bapak Noval' }
       ],
       pickups: {},
       masuk: [],
@@ -655,6 +662,10 @@
     let currentCameraIdx = 0;
     let isScannerStarting = false;
 
+    function canTakeJimpitan() {
+      return Boolean(currentUser && (currentUser.role === 'admin' || currentUser.role === 'petugas'));
+    }
+
     function loadLocalState() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -668,6 +679,12 @@
       } catch {
         return structuredClone(defaultState);
       }
+    }
+
+    function findAccountByCredentials(username, password) {
+      return Object.values(state.users).find(
+        acc => acc.username === username && acc.password === password
+      ) || null;
     }
 
     async function fetchRemoteState() {
@@ -704,31 +721,32 @@
       return 'Rp ' + Number(num || 0).toLocaleString('id-ID');
     }
 
-    function onLoginRoleChange() {
-      const roleKey = document.getElementById('loginRole').value;
-      const acc = state.users[roleKey];
-      if (acc) {
-        document.getElementById('loginUser').value = acc.username;
+    function enterAuthenticatedSession(acc, isRestored = false) {
+      currentUser = acc;
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ username: acc.username, password: acc.password }));
+      document.getElementById('loginError').classList.add('hidden');
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('appScreen').classList.remove('hidden');
+      document.getElementById('activeWeekInput').value = activeWeek;
+      document.getElementById('activeMonthInput').value = activeMonth;
+      document.getElementById('pwTanggal').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('headerScanBtn').classList.toggle('hidden', !canTakeJimpitan());
+      if (!isRestored) {
+        currentTab = acc.role === 'petugas' ? 'petugas' : 'rumah';
+      } else {
+        currentTab = acc.role === 'petugas' ? 'petugas' : 'rumah';
       }
+      initApp();
     }
 
     document.getElementById('loginForm').addEventListener('submit', (e) => {
       e.preventDefault();
-      const roleKey = document.getElementById('loginRole').value;
       const user = document.getElementById('loginUser').value.trim();
       const pass = document.getElementById('loginPass').value;
-      const acc = state.users[roleKey];
+      const acc = findAccountByCredentials(user, pass);
 
-      if (acc && acc.username === user && acc.password === pass) {
-        currentUser = acc;
-        document.getElementById('loginError').classList.add('hidden');
-        document.getElementById('loginScreen').classList.add('hidden');
-        document.getElementById('appScreen').classList.remove('hidden');
-        document.getElementById('activeWeekInput').value = activeWeek;
-        document.getElementById('activeMonthInput').value = activeMonth;
-        document.getElementById('pwTanggal').value = new Date().toISOString().slice(0, 10);
-        currentTab = acc.role === 'petugas' ? 'petugas' : 'rumah';
-        initApp();
+      if (acc) {
+        enterAuthenticatedSession(acc, false);
       } else {
         document.getElementById('loginError').classList.remove('hidden');
       }
@@ -737,6 +755,7 @@
     async function logout() {
       await closeScannerModal();
       closeConfirmPaymentModal();
+      localStorage.removeItem(SESSION_KEY);
       currentUser = null;
       document.getElementById('appScreen').classList.add('hidden');
       document.getElementById('loginScreen').classList.remove('hidden');
@@ -768,6 +787,8 @@
           users: { ...structuredClone(defaultState.users), ...(remote.users || {}) }
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        const refreshedAcc = findAccountByCredentials(currentUser.username, currentUser.password);
+        if (refreshedAcc) currentUser = refreshedAcc;
       }
       document.getElementById('sessionInfo').textContent = `${currentUser.label}${rtLabel} • Tersinkron`;
       buildTabs();
@@ -866,7 +887,7 @@
         const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
         html2canvas(card, { backgroundColor: '#ffffff', scale: 2 }).then(canvas => {
           const link = document.createElement('a');
-          link.download = `QR-Semua-Rumah-Jimpitan-Sewan.${ext}`;
+          link.download = `QR-Semua-Rumah-JIMPITANKU.${ext}`;
           link.href = canvas.toDataURL(mime, 0.95);
           link.click();
         });
@@ -874,16 +895,20 @@
     }
 
     function requestAmbilWithQr(rumahId = null) {
+      if (!canTakeJimpitan()) {
+        alert('Fitur ambil jimpitan hanya tersedia untuk akun Admin dan Petugas.');
+        return;
+      }
       if (rumahId !== null) {
         const rumah = state.rumah.find(r => r.id === rumahId);
         if (!rumah) return;
         const key = `${activeWeek}_${rumahId}`;
         if (state.pickups[key]) {
-          alert(`Rumah ${rumah.kode} (${rumah.pemilik}) sudah tercatat diambil pada minggu ${activeWeek} sebesar ${formatRp(state.pickups[key].nominal)}.`);
+          alert(`Rumah ${rumah.pemilik} (${rumah.rt}) sudah tercatat diambil pada minggu ${activeWeek} sebesar ${formatRp(state.pickups[key].nominal)}.`);
           return;
         }
         if (currentUser && currentUser.role === 'petugas' && currentUser.rt && rumah.rt !== currentUser.rt) {
-          alert(`Rumah ${rumah.kode} milik ${rumah.rt}, bukan wilayah tugas Anda (${currentUser.rt}).`);
+          alert(`Rumah ${rumah.pemilik} milik ${rumah.rt}, bukan wilayah tugas Anda (${currentUser.rt}).`);
           return;
         }
       }
@@ -946,7 +971,7 @@
         );
 
         statusEl.className = 'text-xs p-2.5 rounded-xl bg-emerald-50 text-emerald-800';
-        statusEl.textContent = 'Kamera aktif. Arahkan ke QR Resmi Semua Rumah Jimpitan Sewan.';
+        statusEl.textContent = 'Kamera aktif. Arahkan ke QR Resmi Semua Rumah JIMPITANKU.';
       } catch (err) {
         const msg = String(err?.message || err || '');
         if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
@@ -965,6 +990,10 @@
     }
 
     async function openScannerModal(targetRumahId = null) {
+      if (!canTakeJimpitan()) {
+        alert('Fitur scan & ambil jimpitan hanya tersedia untuk akun Admin dan Petugas.');
+        return;
+      }
       pendingScanRumahId = targetRumahId;
       document.getElementById('qrFileInput').value = '';
       const modal = document.getElementById('scannerModal');
@@ -974,10 +1003,10 @@
       if (targetRumahId !== null) {
         const r = state.rumah.find(item => item.id === targetRumahId);
         targetInfo.textContent = r
-          ? `Scan QR untuk konfirmasi bayar: ${r.kode} (${r.rt}) - ${r.pemilik}`
-          : 'Wajib scan QR resmi Jimpitan Sewan sebelum konfirmasi bayar';
+          ? `Scan QR untuk konfirmasi bayar: ${r.pemilik} (${r.rt})`
+          : 'Wajib scan QR resmi JIMPITANKU sebelum konfirmasi bayar';
       } else {
-        targetInfo.textContent = 'Wajib scan QR resmi Jimpitan Sewan sebelum konfirmasi bayar';
+        targetInfo.textContent = 'Wajib scan QR resmi JIMPITANKU sebelum konfirmasi bayar';
       }
 
       statusEl.className = 'text-xs p-2.5 rounded-xl bg-slate-100 text-slate-700';
@@ -1037,11 +1066,12 @@
         await handleScannedText(decodedText);
       } catch {
         statusEl.className = 'text-xs p-2.5 rounded-xl bg-red-100 text-red-700 font-semibold';
-        statusEl.textContent = '⛔ Gambar tidak memuat QR yang terbaca atau bukan QR resmi Jimpitan Sewan.';
+        statusEl.textContent = '⛔ Gambar tidak memuat QR yang terbaca atau bukan QR resmi JIMPITANKU.';
       }
     }
 
     function openConfirmPaymentModal(preselectedRumahId = null) {
+      if (!canTakeJimpitan()) return;
       const select = document.getElementById('confirmRumahSelect');
       const availableHouses = state.rumah.filter(r => {
         if (currentUser && currentUser.role === 'petugas' && currentUser.rt && r.rt !== currentUser.rt) {
@@ -1055,8 +1085,8 @@
         return;
       }
 
-      select.innerHTML = availableHouses.map(r =>
-        `<option value="${r.id}">${r.kode} (${r.rt}) - ${r.pemilik}</option>`
+      select.innerHTML = availableHouses.map((r, idx) =>
+        `<option value="${r.id}">${idx + 1}. ${r.pemilik} (${r.rt})</option>`
       ).join('');
 
       if (preselectedRumahId && availableHouses.some(r => String(r.id) === String(preselectedRumahId))) {
@@ -1078,6 +1108,7 @@
 
     document.getElementById('confirmPaymentForm').addEventListener('submit', (e) => {
       e.preventDefault();
+      if (!canTakeJimpitan()) return;
       const rumahId = Number(document.getElementById('confirmRumahSelect').value);
       const nominal = Number(document.getElementById('confirmNominalInput').value);
       const rumah = state.rumah.find(r => r.id === rumahId);
@@ -1102,7 +1133,7 @@
         tanggal,
         week: activeWeek,
         rt: rumah.rt || 'RT 37',
-        keterangan: `Jimpitan ${rumah.kode} - ${rumah.pemilik}`,
+        keterangan: `Jimpitan ${rumah.pemilik}`,
         petugas: currentUser.username,
         nominal
       });
@@ -1146,13 +1177,14 @@
       const rtFilter = document.getElementById('filterRtRumah')?.value || 'all';
       const statusFilter = document.getElementById('filterStatusRumah')?.value || 'all';
       const isAdmin = currentUser && currentUser.role === 'admin';
+      const allowAmbil = canTakeJimpitan();
 
       document.getElementById('adminRumahActions').classList.toggle('hidden', !isAdmin);
 
       const rows = state.rumah.filter(r => {
         const key = `${activeWeek}_${r.id}`;
         const isPicked = Boolean(state.pickups[key]);
-        const matchText = r.kode.toLowerCase().includes(query) || r.pemilik.toLowerCase().includes(query) || (r.rt || '').toLowerCase().includes(query);
+        const matchText = r.pemilik.toLowerCase().includes(query) || (r.rt || '').toLowerCase().includes(query);
         const matchRt = rtFilter === 'all' || r.rt === rtFilter;
         const matchStatus = statusFilter === 'all' || (statusFilter === 'sudah' && isPicked) || (statusFilter === 'belum' && !isPicked);
         return matchText && matchRt && matchStatus;
@@ -1164,12 +1196,28 @@
         return;
       }
 
-      tbody.innerHTML = rows.map(r => {
+      tbody.innerHTML = rows.map((r, idx) => {
         const key = `${activeWeek}_${r.id}`;
         const picked = state.pickups[key];
+        let actionButtons = '';
+        if (allowAmbil) {
+          actionButtons += !picked
+            ? `<button onclick="requestAmbilWithQr(${r.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg">Ambil (Scan QR)</button>`
+            : `<button onclick="batalJimpitan(${r.id})" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg">Batal</button>`;
+        }
+        if (isAdmin) {
+          actionButtons += `
+            <button onclick="openRumahModal(${r.id})" class="bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg">Edit</button>
+            <button onclick="hapusRumah(${r.id})" class="bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg">Hapus</button>
+          `;
+        }
+        if (!actionButtons) {
+          actionButtons = `<span class="text-xs text-slate-400">Hanya lihat</span>`;
+        }
+
         return `
           <tr>
-            <td class="py-3 px-4 font-mono text-xs font-semibold">${r.kode}</td>
+            <td class="py-3 px-4 font-mono text-xs font-semibold">${idx + 1}</td>
             <td class="py-3 px-4"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-xs font-semibold">${r.rt || 'RT 37'}</span></td>
             <td class="py-3 px-4 font-medium">${r.pemilik}</td>
             <td class="py-3 px-4">
@@ -1180,16 +1228,7 @@
             </td>
             <td class="py-3 px-4 font-semibold">${picked ? formatRp(picked.nominal) : '-'}</td>
             <td class="py-3 px-4 no-print">
-              <div class="flex flex-wrap gap-1.5">
-                ${!picked
-                  ? `<button onclick="requestAmbilWithQr(${r.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg">Ambil (Scan QR)</button>`
-                  : `<button onclick="batalJimpitan(${r.id})" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg">Batal</button>`
-                }
-                ${isAdmin ? `
-                  <button onclick="openRumahModal(${r.id})" class="bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg">Edit</button>
-                  <button onclick="hapusRumah(${r.id})" class="bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg">Hapus</button>
-                ` : ''}
-              </div>
+              <div class="flex flex-wrap gap-1.5">${actionButtons}</div>
             </td>
           </tr>
         `;
@@ -1197,6 +1236,7 @@
     }
 
     function batalJimpitan(rumahId) {
+      if (!canTakeJimpitan()) return;
       const key = `${activeWeek}_${rumahId}`;
       if (!state.pickups[key]) return;
       delete state.pickups[key];
@@ -1214,7 +1254,6 @@
         document.getElementById('rumahModalTitle').textContent = 'Edit Rumah';
         document.getElementById('editRumahId').value = r.id;
         document.getElementById('rumahRt').value = r.rt || 'RT 37';
-        document.getElementById('rumahKode').value = r.kode;
         document.getElementById('rumahPemilik').value = r.pemilik;
       } else {
         document.getElementById('rumahModalTitle').textContent = 'Tambah Rumah';
@@ -1236,14 +1275,13 @@
       if (!currentUser || currentUser.role !== 'admin') return;
       const id = document.getElementById('editRumahId').value;
       const rt = document.getElementById('rumahRt').value;
-      const kode = document.getElementById('rumahKode').value.trim();
       const pemilik = document.getElementById('rumahPemilik').value.trim();
 
       if (id) {
         const idx = state.rumah.findIndex(r => r.id === Number(id));
-        if (idx > -1) state.rumah[idx] = { ...state.rumah[idx], rt, kode, pemilik };
+        if (idx > -1) state.rumah[idx] = { ...state.rumah[idx], rt, pemilik };
       } else {
-        state.rumah.push({ id: Date.now(), rt, kode, pemilik });
+        state.rumah.push({ id: Date.now(), rt, pemilik });
       }
 
       saveState();
@@ -1264,7 +1302,19 @@
       document.getElementById('trxJenis').value = jenis;
       document.getElementById('trxTanggal').value = new Date().toISOString().slice(0, 10);
       document.getElementById('trxRt').value = currentUser?.rt || 'RT 37';
-      document.getElementById('transaksiModalTitle').textContent = jenis === 'masuk' ? 'Catat Uang Terkumpul' : 'Catat Uang Keluar';
+
+      const ketWrap = document.getElementById('trxKetWrapper');
+      const ketInput = document.getElementById('trxKet');
+      if (jenis === 'masuk') {
+        ketWrap.classList.add('hidden');
+        ketInput.required = false;
+        document.getElementById('transaksiModalTitle').textContent = 'Catat Uang Terkumpul';
+      } else {
+        ketWrap.classList.remove('hidden');
+        ketInput.required = true;
+        document.getElementById('transaksiModalTitle').textContent = 'Catat Uang Keluar';
+      }
+
       const modal = document.getElementById('transaksiModal');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
@@ -1281,7 +1331,9 @@
       const jenis = document.getElementById('trxJenis').value;
       const tanggal = document.getElementById('trxTanggal').value;
       const rt = document.getElementById('trxRt').value;
-      const keterangan = document.getElementById('trxKet').value.trim();
+      const keterangan = jenis === 'masuk'
+        ? `Setoran Jimpitan ${rt}`
+        : document.getElementById('trxKet').value.trim();
       const nominal = Number(document.getElementById('trxNominal').value);
 
       const item = {
@@ -1486,23 +1538,24 @@
     function renderLaporanPetugas() {
       const rt = currentUser?.rt || 'RT 37';
       const searchRumah = (document.getElementById('searchPetugasRumah')?.value || '').toLowerCase();
+      const allowAmbil = canTakeJimpitan();
 
       document.getElementById('petugasTitle').textContent = `Laporan Mingguan Petugas (${rt})`;
       document.getElementById('petugasSubtitle').textContent = `Khusus wilayah ${rt}: hanya rumah & laporan ${rt} yang ditampilkan.`;
 
       const rtHouses = state.rumah.filter(r =>
-        r.rt === rt && (r.kode.toLowerCase().includes(searchRumah) || r.pemilik.toLowerCase().includes(searchRumah))
+        r.rt === rt && r.pemilik.toLowerCase().includes(searchRumah)
       );
       const rumahBody = document.getElementById('petugasRumahListBody');
       if (!rtHouses.length) {
         rumahBody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-400">Belum ada rumah terdaftar di ${rt}.</td></tr>`;
       } else {
-        rumahBody.innerHTML = rtHouses.map(r => {
+        rumahBody.innerHTML = rtHouses.map((r, idx) => {
           const key = `${activeWeek}_${r.id}`;
           const picked = state.pickups[key];
           return `
             <tr>
-              <td class="py-2 px-3 font-mono text-xs font-semibold">${r.kode}</td>
+              <td class="py-2 px-3 font-mono text-xs font-semibold">${idx + 1}</td>
               <td class="py-2 px-3 font-medium">${r.pemilik}</td>
               <td class="py-2 px-3">
                 ${picked
@@ -1512,9 +1565,11 @@
               </td>
               <td class="py-2 px-3 font-semibold">${picked ? formatRp(picked.nominal) : '-'}</td>
               <td class="py-2 px-3">
-                ${!picked
-                  ? `<button onclick="requestAmbilWithQr(${r.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-2.5 py-1 rounded-lg">Ambil (Scan QR)</button>`
-                  : `<button onclick="batalJimpitan(${r.id})" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-lg">Batal</button>`
+                ${allowAmbil
+                  ? (!picked
+                      ? `<button onclick="requestAmbilWithQr(${r.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-2.5 py-1 rounded-lg">Ambil (Scan QR)</button>`
+                      : `<button onclick="batalJimpitan(${r.id})" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-lg">Batal</button>`)
+                  : `<span class="text-xs text-slate-400">Hanya lihat</span>`
                 }
               </td>
             </tr>
@@ -1555,12 +1610,12 @@
       const table = document.getElementById('weeklyExportTable');
       if (!table) return;
       const rt = currentUser?.rt || 'RT';
-      const htmlContent = `<html><head><meta charset="UTF-8"></head><body><h3>Laporan Mingguan ${rt} (${activeWeek})</h3>${table.outerHTML}</body></html>`;
+      const htmlContent = `<html><head><meta charset="UTF-8"></head><body>${KOP_HTML}<h3 style="text-align:center;">Laporan Mingguan ${rt} (${activeWeek})</h3>${table.outerHTML}</body></html>`;
       const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `laporan-mingguan-${rt.toLowerCase().replace(/\s+/g, '')}-${activeWeek}.xls`;
+      a.download = `laporan-mingguan-jimpitanku-${rt.toLowerCase().replace(/\s+/g, '')}-${activeWeek}.xls`;
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -1570,7 +1625,7 @@
       const rt = currentUser?.rt || 'RT';
       html2canvas(target, { backgroundColor: '#ffffff', scale: 2 }).then(canvas => {
         const link = document.createElement('a');
-        link.download = `laporan-mingguan-${rt.toLowerCase().replace(/\s+/g, '')}-${activeWeek}.jpg`;
+        link.download = `laporan-mingguan-jimpitanku-${rt.toLowerCase().replace(/\s+/g, '')}-${activeWeek}.jpg`;
         link.href = canvas.toDataURL('image/jpeg', 0.92);
         link.click();
       });
@@ -1579,55 +1634,55 @@
     function renderReportPreview() {
       const type = document.getElementById('reportType')?.value || 'mingguan_gabungan';
       const box = document.getElementById('reportPreviewBox');
-      let html = '';
+      let bodyHtml = '';
 
       if (type === 'mingguan_gabungan' || type === 'mingguan_rt37' || type === 'mingguan_rt38') {
         const rtFilter = type === 'mingguan_rt37' ? 'RT 37' : type === 'mingguan_rt38' ? 'RT 38' : 'all';
         const judulRt = rtFilter === 'all' ? 'Gabungan (RT 37 & RT 38)' : rtFilter;
         const list = getWeeklyPickups(rtFilter);
         const total = list.reduce((s, i) => s + Number(i.nominal || 0), 0);
-        html = `<h3 class="font-bold mb-2">Rekap Mingguan ${judulRt} • Minggu ${activeWeek} (Total: ${formatRp(total)})</h3>
+        bodyHtml = `<h3 class="font-bold mb-2 text-center">Rekap Mingguan ${judulRt} • Minggu ${activeWeek} (Total: ${formatRp(total)})</h3>
           <table id="exportTable" class="w-full text-xs border-collapse border border-slate-300">
-            <thead><tr class="bg-slate-100"><th class="border p-2">Tanggal</th><th class="border p-2">RT</th><th class="border p-2">Keterangan</th><th class="border p-2">Petugas</th><th class="border p-2">Nominal</th></tr></thead>
+            <thead><tr class="bg-slate-100"><th class="border p-2">Tanggal</th><th class="border p-2">RT</th><th class="border p-2">Catatan</th><th class="border p-2">Petugas</th><th class="border p-2">Nominal</th></tr></thead>
             <tbody>${list.map(w => `<tr><td class="border p-2">${w.tanggal}</td><td class="border p-2">${w.rt || '-'}</td><td class="border p-2">${w.keterangan}</td><td class="border p-2">${w.petugas || '-'}</td><td class="border p-2">${w.nominal}</td></tr>`).join('')}</tbody>
           </table>`;
       } else if (type === 'bulanan_gabungan' || type === 'bulanan_rt37' || type === 'bulanan_rt38') {
         const rtFilter = type === 'bulanan_rt37' ? 'RT 37' : type === 'bulanan_rt38' ? 'RT 38' : 'all';
         const judulRt = rtFilter === 'all' ? 'Gabungan (RT 37 & RT 38)' : rtFilter;
         const list = getMonthlySummary(rtFilter);
-        html = `<h3 class="font-bold mb-2">Rekap Bulanan ${judulRt}</h3>
+        bodyHtml = `<h3 class="font-bold mb-2 text-center">Rekap Bulanan ${judulRt}</h3>
           <table id="exportTable" class="w-full text-xs border-collapse border border-slate-300">
             <thead><tr class="bg-slate-100"><th class="border p-2">Bulan</th><th class="border p-2">Wilayah</th><th class="border p-2">Uang Terkumpul</th><th class="border p-2">Uang Keluar</th><th class="border p-2">Saldo</th></tr></thead>
             <tbody>${list.map(b => `<tr><td class="border p-2">${b.bulan}</td><td class="border p-2">${judulRt}</td><td class="border p-2">${b.masuk}</td><td class="border p-2">${b.keluar}</td><td class="border p-2">${b.masuk - b.keluar}</td></tr>`).join('')}</tbody>
           </table>`;
       } else if (type === 'rekap_petugas') {
         const list = getPetugasSummary('all', 'all');
-        html = `<h3 class="font-bold mb-2">Rekap Per Petugas (Semua Waktu)</h3>
+        bodyHtml = `<h3 class="font-bold mb-2 text-center">Rekap Per Petugas (Semua Waktu)</h3>
           <table id="exportTable" class="w-full text-xs border-collapse border border-slate-300">
             <thead><tr class="bg-slate-100"><th class="border p-2">Petugas</th><th class="border p-2">RT</th><th class="border p-2">Jumlah Setoran</th><th class="border p-2">Total Terkumpul</th></tr></thead>
             <tbody>${list.map(p => `<tr><td class="border p-2">${p.petugas}</td><td class="border p-2">${p.rt}</td><td class="border p-2">${p.jumlah}</td><td class="border p-2">${p.total}</td></tr>`).join('')}</tbody>
           </table>`;
       } else {
         const total = state.keluar.reduce((s, i) => s + Number(i.nominal || 0), 0);
-        html = `<h3 class="font-bold mb-2">Laporan Uang Keluar (Total: ${formatRp(total)})</h3>
+        bodyHtml = `<h3 class="font-bold mb-2 text-center">Laporan Uang Keluar (Total: ${formatRp(total)})</h3>
           <table id="exportTable" class="w-full text-xs border-collapse border border-slate-300">
             <thead><tr class="bg-slate-100"><th class="border p-2">Tanggal</th><th class="border p-2">RT</th><th class="border p-2">Keperluan</th><th class="border p-2">Nominal</th></tr></thead>
             <tbody>${state.keluar.map(k => `<tr><td class="border p-2">${k.tanggal}</td><td class="border p-2">${k.rt || '-'}</td><td class="border p-2">${k.keterangan}</td><td class="border p-2">${k.nominal}</td></tr>`).join('')}</tbody>
           </table>`;
       }
 
-      box.innerHTML = html;
+      box.innerHTML = KOP_HTML + bodyHtml;
     }
 
     function exportExcel() {
       const table = document.getElementById('exportTable');
       if (!table) return alert('Tampilkan laporan terlebih dahulu.');
-      const htmlContent = `<html><head><meta charset="UTF-8"></head><body>${table.outerHTML}</body></html>`;
+      const htmlContent = `<html><head><meta charset="UTF-8"></head><body>${KOP_HTML}${table.outerHTML}</body></html>`;
       const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `rekap-jimpitan-${document.getElementById('reportType').value}.xls`;
+      a.download = `jimpitanku-${document.getElementById('reportType').value}.xls`;
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -1636,7 +1691,7 @@
       const target = document.getElementById('reportPreviewBox');
       html2canvas(target, { backgroundColor: '#ffffff', scale: 2 }).then(canvas => {
         const link = document.createElement('a');
-        link.download = `rekap-jimpitan-${document.getElementById('reportType').value}.jpg`;
+        link.download = `jimpitanku-${document.getElementById('reportType').value}.jpg`;
         link.href = canvas.toDataURL('image/jpeg', 0.92);
         link.click();
       });
@@ -1663,10 +1718,27 @@
       state.users[roleKey].username = u;
       state.users[roleKey].password = p;
       saveState();
+      if (currentUser && currentUser.roleKey === roleKey) {
+        currentUser = state.users[roleKey];
+        localStorage.setItem(SESSION_KEY, JSON.stringify({ username: u, password: p }));
+      }
       alert('Akun berhasil diperbarui.');
     }
 
-    onLoginRoleChange();
+    // Pulihkan sesi otomatis jika masih tersimpan dan belum klik Keluar
+    (function restoreSessionIfExists() {
+      try {
+        const rawSession = localStorage.getItem(SESSION_KEY);
+        if (!rawSession) return;
+        const parsedSession = JSON.parse(rawSession);
+        const matched = findAccountByCredentials(parsedSession.username, parsedSession.password);
+        if (matched) {
+          enterAuthenticatedSession(matched, true);
+        }
+      } catch (err) {
+        console.warn('Gagal memulihkan sesi:', err);
+      }
+    })();
   </script>
 </body>
 </html>
